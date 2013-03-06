@@ -1,0 +1,47 @@
+Index: scripts/perl/utils_config.pl
+===================================================================
+--- scripts/perl/utils_config.pl	(revision 9833)
++++ scripts/perl/utils_config.pl	(revision 9836)
+@@ -434,24 +434,24 @@
+ 		$databaseDataDir = File::Spec->catdir( $DATABASE_HOME, "data" );
+ 
+ 		# Database commands
+-		$pgctl = File::Spec->catfile( $databaseBinDir, "pg_ctl" );
+-		if ( ! -e $pgctl )
+-		{
+-			printError(
+-				"\n" .
+-				"Configuration problem:\n" .
+-				"    Postgres program directory is missing!\n" .
+-				"\n" .
+-				"    The iRODS configuration indicates the installed Postgres\n" .
+-				"    directory, but the files aren't there.  Has the database been\n" .
+-				"    fully installed?\n" .
+-				"\n" .
+-				"    Please check \$DATABASE_HOME in the configuration file.\n" .
+-				"        Config file:   $irodsConfig\n" .
+-				"        Database path: $DATABASE_HOME\n" .
+-				"        Database commands:   $databaseBinDir\n" );
+-			return 0;
+-		}
++#		$pgctl = File::Spec->catfile( $databaseBinDir, "pg_ctl" );
++#		if ( ! -e $pgctl )
++#		{
++#			printError(
++#				"\n" .
++#				"Configuration problem:\n" .
++#				"    Postgres program directory is missing!\n" .
++#				"\n" .
++#				"    The iRODS configuration indicates the installed Postgres\n" .
++#				"    directory, but the files aren't there.  Has the database been\n" .
++#				"    fully installed?\n" .
++#				"\n" .
++#				"    Please check \$DATABASE_HOME in the configuration file.\n" .
++#				"        Config file:   $irodsConfig\n" .
++#				"        Database path: $DATABASE_HOME\n" .
++#				"        Database commands:   $databaseBinDir\n" );
++#			return 0;
++#		}
+ 		$psql     = File::Spec->catfile( $databaseBinDir, "psql" );
+ 		$createdb = File::Spec->catfile( $databaseBinDir, "createdb" );
+ 		$dropdb   = File::Spec->catfile( $databaseBinDir, "dropdb" );

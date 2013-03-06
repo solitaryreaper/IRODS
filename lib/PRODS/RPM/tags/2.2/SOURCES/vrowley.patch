@@ -1,0 +1,12 @@
+Index: server/core/src/rodsServer.c
+===================================================================
+--- server/core/src/rodsServer.c	(revision 286)
++++ server/core/src/rodsServer.c	(working copy)
+@@ -87,6 +87,7 @@
+     signal(SIGTTIN, SIG_IGN);
+     signal(SIGTTOU, SIG_IGN);
+     signal(SIGCHLD, SIG_IGN);
++	signal(SIGPIPE, SIG_IGN);
+ #ifdef osx_platform
+     signal(SIGINT, (void *) serverExit);
+     signal(SIGHUP, (void *)serverExit);

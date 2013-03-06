@@ -1,0 +1,125 @@
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/192/trunk/clients/jargon/src/test
+END
+Test.java
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/154/trunk/clients/jargon/src/test/Test.java
+END
+MetaDataTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/144/trunk/clients/jargon/src/test/MetaDataTest.java
+END
+irule.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/112/trunk/clients/jargon/src/test/irule.java
+END
+Spcommand.java
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/3/trunk/clients/jargon/src/test/Spcommand.java
+END
+IRODSMetaDataTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/192/trunk/clients/jargon/src/test/IRODSMetaDataTest.java
+END
+GSITest.java
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/148/trunk/clients/jargon/src/test/GSITest.java
+END
+MainTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/192/trunk/clients/jargon/src/test/MainTest.java
+END
+MoreTests.java
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/192/trunk/clients/jargon/src/test/MoreTests.java
+END
+ShadowFileTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/3/trunk/clients/jargon/src/test/ShadowFileTest.java
+END
+AnalyzeVolumeSliceExample.java
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/3/trunk/clients/jargon/src/test/AnalyzeVolumeSliceExample.java
+END
+Smkdir.java
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/3/trunk/clients/jargon/src/test/Smkdir.java
+END
+Scat.java
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/182/trunk/clients/jargon/src/test/Scat.java
+END
+Sput.java
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/3/trunk/clients/jargon/src/test/Sput.java
+END
+Utils.java
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/3/trunk/clients/jargon/src/test/Utils.java
+END
+Sls.java
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/3/trunk/clients/jargon/src/test/Sls.java
+END
+iadmin.java
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/154/trunk/clients/jargon/src/test/iadmin.java
+END
+Srm.java
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/152/trunk/clients/jargon/src/test/Srm.java
+END
+Sget.java
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/3/trunk/clients/jargon/src/test/Sget.java
+END
+MetaDataDelete.java
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/3/trunk/clients/jargon/src/test/MetaDataDelete.java
+END
+CopyTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/177/trunk/clients/jargon/src/test/CopyTest.java
+END

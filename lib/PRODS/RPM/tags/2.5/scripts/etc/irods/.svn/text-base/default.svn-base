@@ -1,0 +1,55 @@
+# Set this to the UNIX username to be used for execution of the server
+RUN_AS_USER=irods
+
+# Username and password needed to access the DB. For Oracle this should be of the form: username@service
+DB_USERNAME=irods
+DB_PASSWORD=irods
+
+# Set to the DNS name of the ICAT-enabled iRODS server for this data grid, 'localhost' if this is the ICAT-enabled server itself
+icatHost=localhost
+
+# Set these to the iRODS user (of type 'rodsadmin') that the server should run as
+IRODS_USER=rodsBoot
+IRODS_PW=RODS
+
+# The zone of the iRODS data grid
+IRODS_ZONE=tempZone
+
+# This should be set to the hostname of this server
+IRODS_HOST=escvig8.dl.ac.uk
+
+# This defines the contents of the irodsHost file, multiple lines are fine
+IRODS_HOSTCONFIG="localhost escvig8.dl.ac.uk
+another.host.tld can.be.set.com"
+
+# Define the port on which this iRODS server should listen
+irodsPort=1247
+
+# Define the port range that iRODS uses for listener processes and parallel file transfer operations
+svrPortRangeStart=64000
+svrPortRangeEnd=65255
+
+# Set logging verbosity.
+# Lower numbers mean more log output
+spLogLevel=3
+
+# Set to non-zero to enable output of SQL sent to the ICAT database
+spLogSql=0
+
+# Set to non-zero to define whether the rule execution server running on the ICAT-enabled server should be used
+reServerOnIes=1
+
+# Enables port reconnection every 10 minutes? Does not seem to be used anywhere
+svrPortReconnect=1
+
+# Add here any local customisations made to the rule execution server configuration e.g. extra rule sets
+reRuleSet="core"
+reFuncMapSet="core"
+reVariableMapSet="core"
+
+# Set this variable to 1 to enable test mode for rules
+#RETESTFLAG=0
+
+# These are used in Kerberos authentication, and should be set to the service principal name and the location of the keytab file respectively
+KerberosName="irods/zuri.unc.edu@UNC.EDU"
+KRB5_KTNAME="/etc/krb5.keytab"

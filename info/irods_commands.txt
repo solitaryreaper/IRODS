@@ -1,0 +1,18 @@
+// List of useful IRODS commands for reference
+
+# Create a resource
+shishir@ubuntu:~$ iadmin mkresc doane 'unix file system' cache 'ubuntu' '/home/shishir/Work/IRODS/resources/iRODS/resourceGroups/offsite/doane'
+
+# Create a resource group
+shishir@ubuntu:~$ iadmin atrg offsite doane
+
+# Setting the path in .bashrc to directly access icommand from command line
+export PATH=$PATH:/home/shishir/Work/IRODS/resources/iRODS/clients/icommands/bin
+
+# List all files in IRODS recursively
+ils -rV
+
+# List all resources
+ilsresc -V
+
+

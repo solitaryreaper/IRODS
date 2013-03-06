@@ -1,0 +1,83 @@
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/gui
+END
+MetaDataTableDisplay.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/gui/MetaDataTableDisplay.java
+END
+ClausesPanel.java
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/gui/ClausesPanel.java
+END
+JargonTree.java
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/gui/JargonTree.java
+END
+JargonTreeModel.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/gui/JargonTreeModel.java
+END
+QueryPanel.java
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/gui/QueryPanel.java
+END
+JargonGui.java
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/gui/JargonGui.java
+END
+MetaDataDisplay.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/gui/MetaDataDisplay.java
+END
+JargonTreeCellRenderer.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/gui/JargonTreeCellRenderer.java
+END
+JargonTab.java
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/gui/JargonTab.java
+END
+JargonTreeCellEditor.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/gui/JargonTreeCellEditor.java
+END
+SelectionChooser.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/gui/SelectionChooser.java
+END
+TransferStatusPanel.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/gui/TransferStatusPanel.java
+END
+ConditionChooser.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/gui/ConditionChooser.java
+END

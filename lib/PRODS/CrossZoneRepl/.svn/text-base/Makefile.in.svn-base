@@ -1,0 +1,121 @@
+
+# we assume that iRODS software has already been built successfully in this place.
+# We just need to set two parameters: IRODS_SRC_HOME, INSTALL_DIR
+
+# change the CPP compiler there is a different compiler
+CPP = g++
+
+# set the install dir
+CROSS_ZONE_REPL_DIR=$(INSTALL_DIR)/CrossZoneRepl
+
+# do not change 'buildDir', which is used by iRODS software build env.
+ifndef buildDir
+buildDir = $(IRODS_SRC_HOME)
+endif
+
+include $(buildDir)/config/config.mk
+include $(buildDir)/config/platform.mk
+include $(buildDir)/config/directories.mk
+include $(buildDir)/config/common.mk
+
+SRC_DIR = .
+OBJ_DIR = .
+
+#CFLAGS=$(MY_CFLAG)
+#CFLAGS = $(CFLAGS_OPTIONS) $(LIB_INCLUDES) $(SVR_INCLUDES) $(MODULE_CFLAGS)
+#CFLAGS = -g $(CFLAGS_OPTIONS) $(LIB_INCLUDES) $(SVR_INCLUDES) $(MODULE_CFLAGS)
+
+CFLAGS_OPTIONS := -g $(CFLAGS) $(MY_CFLAG)
+ifdef GSI_AUTH
+CFLAGS_OPTIONS += -D GSI_AUTH
+endif
+ifdef KRB_AUTH
+CFLAGS_OPTIONS += -D KRB_AUTH
+endif
+
+CFLAGS =    $(CFLAGS_OPTIONS) $(LIB_INCLUDES) $(SVR_INCLUDES) $(MODULE_CFLAGS)
+
+LDFLAGS += $(CL_LDADD) $(LIBRARY) $(MODULE_LDFLAGS)
+
+LOCAL_OBJS = $(OBJ_DIR)/CrossZoneRepl.o $(OBJ_DIR)/AvuMetaData.o $(OBJ_DIR)/utils.o
+LOCAL_TARGET = ./CrossZoneRepl
+
+ifeq ($(OS_platform), solaris_platform)
+LDADD+=-lnsl -lsocket
+endif
+
+ifeq ($(OS_platform), solaris_platform)
+SO_FLAG = -G
+DYLIB = 
+endif
+
+ifeq ($(OS_platform), linux_platform)
+endif
+
+ifeq ($(OS_platform),sunos_platform)
+SO_FLAG = -G
+endif
+
+ifeq ($(OS_platform),aix_platform)
+SO_FLAG = -G
+endif
+
+ifeq ($(OS_platform), osx_platform)
+CC = gcc
+SO_FLAG = -fno-common -dynamiclib
+endif
+
+ifeq ($(OS_platform),c90_platform)
+endif
+
+ifeq ($(OS_platform),sgi_platform)
+endif
+
+
+# SGI doesn't like -lm in the middle of the CC line
+ifeq ($(OS_platform), osx_platform)
+else
+ifeq ($(OS_platform), sgi_platform)
+else
+LDADD+=-lm
+endif
+endif
+
+ifdef GSI_AUTH
+ifeq ($(OS_platform), OS_platform_aix)
+LDADD+= $(LIB_GSI_AUTH) $(KRB_LIBS)
+else
+ifeq ($(OS_platform), c90_platform)
+LDADD+= $(LIB_GSI_AUTH) $(KRB_LIBS)
+else
+LDADD+= $(LIB_GSI_AUTH) $(KRB_LIBS) -z muldefs
+endif
+endif
+endif
+
+LDADD+=-lpthread
+
+
+all: $(LOCAL_TARGET)
+
+$(OBJ_DIR)/%.o:  $(SRC_DIR)/%.c 
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+
+$(OBJ_DIR)/%.o:  $(SRC_DIR)/%.cpp 
+	$(CPP) -c $(CFLAGS) -o $@ $<
+
+
+$(LOCAL_TARGET): $(LOCAL_OBJS)
+	@echo "linking `basename $@`..."
+	$(CPP) $(SO_FLAG) -o $@ $(LOCAL_OBJS) $(LDFLAGS)
+ 
+install: $(LOCAL_TARGET) 
+	-mkdir $(CROSS_ZONE_REPL_DIR)
+	cp $(LOCAL_TARGET) $(CROSS_ZONE_REPL_DIR)
+	cp crosszonerepl.cfg $(CROSS_ZONE_REPL_DIR)
+	cp run_CrossZoneRepl.sh $(CROSS_ZONE_REPL_DIR)
+	cp readme.txt $(CROSS_ZONE_REPL_DIR)
+
+clean:
+	rm -f $(LOCAL_TARGET) $(LOCAL_OBJS)

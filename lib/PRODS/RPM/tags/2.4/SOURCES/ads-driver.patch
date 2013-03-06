@@ -1,0 +1,1529 @@
+Index: server/Makefile
+===================================================================
+--- server/Makefile	(revision 286)
++++ server/Makefile	(working copy)
+@@ -22,8 +22,8 @@
+ include $(buildDir)/config/common.mk
+ 
+ 
++ADS_LIBS=/usr/lib/libsysreq.a /usr/lib/libvtp.a /usr/lib/librec.a
+ 
+-
+ #
+ # Source files
+ # 	core	shared functions for all servers
+@@ -67,6 +67,7 @@
+ 		$(svrDriversObjDir)/structFileDriver.o \
+ 		$(svrDriversObjDir)/fileDriver.o \
+ 		$(svrDriversObjDir)/unixFileDriver.o \
++		$(svrDriversObjDir)/adsFileDriver.o \
+ 		$(svrDriversObjDir)/univMSSDriver.o
+ 
+ ifdef HAAW_STRUCT_FILE
+@@ -411,7 +412,7 @@
+ 
+ $(serverBinDir)/irodsAgent: $(svrCoreObjDir)/rodsAgent.o $(LIBRARY) $(OBJS) $(MODULE_OBJS)
+ 	@echo "Link agent server `basename $@`..."
+-	@$(LDR) -o $@ $(svrCoreObjDir)/rodsAgent.o $(LIBRARY) $(MODULE_LDFLAGS) $(OBJS) $(LDFLAGS) $(AG_LDADD)
++	@$(LDR) -o $@ $(svrCoreObjDir)/rodsAgent.o $(LIBRARY) $(MODULE_LDFLAGS) $(OBJS) $(LDFLAGS) $(AG_LDADD) $(ADS_LIBS)
+ 
+ # Rule engine
+ $(svrCoreObjDir)/irodsReServer.o: $(svrCoreObjDir)/%.o: $(svrCoreSrcDir)/%.c $(LIBRARY) $(OBJS)
+@@ -420,7 +421,7 @@
+ 
+ $(serverBinDir)/irodsReServer: $(svrCoreObjDir)/irodsReServer.o $(LIBRARY) $(OBJS) $(MODULE_OBJS)
+ 	@echo "Link rule engine server `basename $@`..."
+-	@$(LDR) -o $@ $(svrCoreObjDir)/irodsReServer.o $(LIBRARY) $(MODULE_LDFLAGS) $(OBJS) $(LDFLAGS)
++	@$(LDR) -o $@ $(svrCoreObjDir)/irodsReServer.o $(LIBRARY) $(MODULE_LDFLAGS) $(OBJS) $(LDFLAGS) $(ADS_LIBS)
+ 
+ # RODS
+ $(svrCoreObjDir)/rodsServer.o: $(svrCoreObjDir)/%.o: $(svrCoreSrcDir)/%.c $(LIBRARY) $(OBJS)
+@@ -429,7 +430,7 @@
+ 
+ $(serverBinDir)/irodsServer: $(svrCoreObjDir)/rodsServer.o $(LIBRARY) $(OBJS) $(MODULE_OBJS)
+ 	@echo "Link rods server `basename $@`..."
+-	@$(LDR) -o $@ $(svrCoreObjDir)/rodsServer.o $(LIBRARY) $(OBJS) $(MODULE_LDFLAGS) $(LDFLAGS)
++	@$(LDR) -o $@ $(svrCoreObjDir)/rodsServer.o $(LIBRARY) $(OBJS) $(MODULE_LDFLAGS) $(LDFLAGS) $(ADS_LIBS)
+ 
+ 
+ # xmsg server
+@@ -439,7 +440,7 @@
+ 
+ $(serverBinDir)/irodsXmsgServer: $(svrCoreObjDir)/irodsXmsgServer.o $(LIBRARY) $(OBJS) $(MODULE_OBJS)
+ 	@echo "Link xmsg server `basename $@`..."
+-	@$(LDR) -o $@ $(svrCoreObjDir)/irodsXmsgServer.o $(LIBRARY) $(OBJS) $(MODULE_LDFLAGS) $(LDFLAGS)
++	@$(LDR) -o $@ $(svrCoreObjDir)/irodsXmsgServer.o $(LIBRARY) $(OBJS) $(MODULE_LDFLAGS) $(LDFLAGS) $(ADS_LIBS)
+ 
+ #
+ # Tests
+Index: server/drivers/include/fileDriverTable.h
+===================================================================
+--- server/drivers/include/fileDriverTable.h	(revision 286)
++++ server/drivers/include/fileDriverTable.h	(working copy)
+@@ -25,6 +25,8 @@
+ #endif
+ #include "univMSSDriver.h"
+ 
++#include "adsFileDriver.h"
++
+ #define NO_FILE_DRIVER_FUNCTIONS intNoSupport,intNoSupport,intNoSupport,intNoSupport,intNoSupport,intNoSupport,intNoSupport,intNoSupport,longNoSupport,intNoSupport,intNoSupport,intNoSupport,intNoSupport,intNoSupport,intNoSupport,intNoSupport,intNoSupport, intNoSupport, longNoSupport, intNoSupport, intNoSupport, intNoSupport
+ 
+ fileDriver_t FileDriverTable[] = {
+@@ -69,6 +71,11 @@
+     intNoSupport, univMSSFileMkdir, univMSSFileChmod, intNoSupport, intNoSupport,
+     intNoSupport, intNoSupport, intNoSupport, intNoSupport,
+     longNoSupport, intNoSupport, univMSSStageToCache, univMSSSyncToArch},
++   {ADS_FILE_TYPE,intNoSupport,intNoSupport,intNoSupport,intNoSupport,
++   intNoSupport, adsFileUnlink, intNoSupport, intNoSupport, longNoSupport,
++     intNoSupport, adsFileMkdir, adsFileChmod, adsFileRmdir, adsFileOpendir,
++     adsFileClosedir, adsFileReaddir, intNoSupport, adsFileRename,
++     longNoSupport, intNoSupport, adsStageToCache, adsSyncToArch},
+ };
+ 
+ int NumFileDriver = sizeof (FileDriverTable) / sizeof (fileDriver_t);
+Index: server/drivers/include/adsFileDriver.h
+===================================================================
+--- server/drivers/include/adsFileDriver.h	(revision 0)
++++ server/drivers/include/adsFileDriver.h	(revision 0)
+@@ -0,0 +1,122 @@
++/*** Copyright (c), The Regents of the University of California            ***
++ *** For more information please refer to files in the COPYRIGHT directory ***/
++
++/* unixFileDriver.h - header file for unixFileDriver.c
++ */
++
++
++
++#ifndef ADS_FILE_DRIVER_H
++#define ADS_FILE_DRIVER_H
++
++#include <stdio.h>
++#ifndef _WIN32
++#include <sys/file.h>
++#include <sys/param.h>
++#endif
++#include <errno.h>
++#include <sys/stat.h>
++#include <string.h>
++#ifndef _WIN32
++#include <unistd.h>
++#endif
++#include <sys/types.h>
++#if defined(osx_platform)
++#include <sys/malloc.h>
++#else
++#include <malloc.h>
++#endif
++#include <fcntl.h>
++#ifndef _WIN32
++#include <sys/file.h>
++#include <unistd.h>  
++#endif
++#include <dirent.h>
++   
++#if defined(solaris_platform)
++#include <sys/statvfs.h>
++#endif
++#if defined(linux_platform)
++#include <sys/vfs.h>
++#endif
++#if defined(aix_platform) || defined(sgi_platform)
++#include <sys/statfs.h>
++#endif
++#if defined(osx_platform)
++#include <sys/param.h>
++#include <sys/mount.h>
++#endif
++#include <sys/stat.h>
++#include <ctype.h>
++
++
++#include "rods.h"
++#include "rcConnect.h"
++#include "msParam.h"
++
++#include <libsysreq/sysreq.h>
++#include <tapes.h>
++#include <tapesys.h>
++#include <label.h>
++#include <recsys.h>
++
++#define CMDLEN 255
++#define BLOCKSIZE 32767
++
++int
++adsFileUnlink (rsComm_t *rsComm, char *filename);
++int
++adsFileStat (rsComm_t *rsComm, char *filename, struct stat *statbuf);
++int
++adsFileFstat (rsComm_t *rsComm, int fd, struct stat *statbuf);
++int
++adsFileMkdir (rsComm_t *rsComm, char *filename, int mode);
++int
++adsFileChmod (rsComm_t *rsComm, char *filename, int mode);
++int
++adsFileOpendir (rsComm_t *rsComm, char *dirname, void **outDirPtr);
++int
++adsFileReaddir (rsComm_t *rsComm, void *dirPtr, struct  dirent **direntPtr);
++int
++adsFileRename (rsComm_t *rsComm, char *oldFileName, char *newFileName);
++int
++adsFileRmdir (rsComm_t *rsComm, char *filename);
++int
++adsFileClosedir (rsComm_t *rsComm, void *dirPtr);
++int
++adsStageToCache (rsComm_t *rsComm, fileDriverType_t cacheFileType,
++int mode, int flags, char *filename,
++char *cacheFilename,  keyValPair_t *condInput);
++int
++adsSyncToArch (rsComm_t *rsComm, fileDriverType_t cacheFileType,
++int mode, int flags, char *filename,
++char *cacheFilename,  keyValPair_t *condInput);
++
++struct AdsStream {
++   struct RECLIST *rStream;
++   unsigned long fileWriteSize;
++};
++
++struct AdsStream adsStreams[MAX_TSTREAM];
++
++enum SKELTYPE  { skelhdr, skeleof, skeleov };
++
++int adsInitAdsStreams( int streamID );
++int writeVolumeLabels( struct RECLIST *r);
++int initRecordStruct( struct RECLIST *r);
++int adsWriteLabels(int ts, char* tapeName, char* tapeOwner);
++int put_label(struct RECLIST *r, char *label);
++int writeVolumeHeaders( struct RECLIST *r );
++int writeskel(struct RECLIST *r, enum SKELTYPE stype);
++void mygetdate(char *dbuf, int *outyear, int *outday);
++char get_rform(struct RECLIST *r);
++char get_battr(struct RECLIST *r);
++void upcase(char *s);
++int wrvol(struct RECLIST *r);
++int wreof(struct RECLIST *r);
++int chekvol(struct RECLIST *r);
++int get_label(struct RECLIST *r, char *label);
++void despace(char *str);
++int do_wrend(struct RECLIST *r, enum SKELTYPE stype);
++int writevol(struct RECLIST *r);
++#endif	/* ADS_FILE_DRIVER_H */
+Index: server/drivers/src/adsFileDriver.c
+===================================================================
+--- server/drivers/src/adsFileDriver.c	(revision 0)
++++ server/drivers/src/adsFileDriver.c	(revision 0)
+@@ -0,0 +1,1247 @@
++#include "adsFileDriver.h"
++
++int
++adsFileUnlink (rsComm_t *rsComm, char *filename)
++{
++	char service[SRQLEN_SERVICE] = "pathsrb";
++	char *user = getenv("ADS_USER");
++	char command[CMDLEN];
++	char replyBuffer[BLOCKSIZE];
++	char tapeID[LEN_VID+1];
++	char *ptr;
++
++
++	int replyLen=BLOCKSIZE;
++	int response;
++
++	if (!user)
++	{
++		user = "IRODSTST";
++	}
++
++	sprintf(command,"get -u %s %s",user,filename);
++	rodsLog(LOG_DEBUG,"Sending to pathtape: %s",command);
++
++	do
++    {
++        replyLen=BLOCKSIZE;
++        response = _sysreqs(service, command, replyBuffer, &replyLen );
++
++        if (response==SYS_MORE)
++        {
++                /* Need to get more info from sysreq, last line of reply is the command to send */
++                replyBuffer[replyLen-1]='\0';
++                ptr=strrchr(replyBuffer,'\n');
++
++                if (ptr!=NULL)
++                {
++                        ptr++;
++                        (void) strcpy(command,ptr);
++                        *ptr='\0';
++                        puts(replyBuffer);
++                }
++                else
++                {
++                        strcpy(command,replyBuffer);
++                }
++        }
++		else if (response<0)
++		{
++			rodsLog(LOG_ERROR,"Error from pathtape: %d, %s",response,tapstr());
++			return ADS_ERROR_IN_PATHTAPE;
++		}
++    } while (response==SYS_MORE);
++
++	rodsLog(LOG_DEBUG,"Received from pathtape: %s",replyBuffer);
++
++	strncpy(tapeID,replyBuffer,LEN_VID);
++	tapeID[LEN_VID]='\0';
++	/* Now tapeID[] holds the VID of the tape we are after, so use it to download from ADS */
++	rodsLog(LOG_DEBUG,"Got tape ID %s",tapeID);
++
++	/* Now we need to instruct flfsys to destroy this tape
++	 * Delete the pathtape entry and purge it from ADS */
++	sprintf(command,"delete -u %s %s",user,filename);
++    rodsLog(LOG_DEBUG,"Sending to pathtape: %s",command);
++	do
++    {
++        replyLen=BLOCKSIZE;
++        response = _sysreqs(service, command, replyBuffer, &replyLen );
++
++        if (response==SYS_MORE)
++        {
++                /* Need to get more info from sysreq, last line of reply is the command to send */
++                replyBuffer[replyLen-1]='\0';
++                ptr=strrchr(replyBuffer,'\n');
++
++                if (ptr!=NULL)
++                {
++                        ptr++;
++                        (void) strcpy(command,ptr);
++                        *ptr='\0';
++                        puts(replyBuffer);
++                }
++                else
++                {
++                        strcpy(command,replyBuffer);
++                }
++        }
++		else if (response<0)
++		{
++			rodsLog(LOG_ERROR,"Error from pathtape: %d, %s",response,tapstr());
++			return ADS_ERROR_IN_PATHTAPE;
++		}
++    } while (response==SYS_MORE);
++
++	rodsLog(LOG_DEBUG,"Received from pathtape: %s",replyBuffer);
++
++	sprintf(service,"flfsys");
++	sprintf(command,"purge %s %s",user,tapeID);
++	rodsLog(LOG_DEBUG,"Sending to %s: %s",service,command);
++
++	do
++    {
++        replyLen=BLOCKSIZE;
++        response = _sysreqs(service, command, replyBuffer, &replyLen );
++
++        if (response==SYS_MORE)
++        {
++                /* Need to get more info from sysreq, last line of reply is the command to send */
++                replyBuffer[replyLen-1]='\0';
++                ptr=strrchr(replyBuffer,'\n');
++
++                if (ptr!=NULL)
++                {
++                        ptr++;
++                        (void) strcpy(command,ptr);
++                        *ptr='\0';
++                        puts(replyBuffer);
++                }
++                else
++                {
++                        strcpy(command,replyBuffer);
++                }
++        }
++        else if (response<0)
++        {
++            rodsLog(LOG_ERROR,"Error from pathtape: %d, %s",response,tapstr());
++            return ADS_ERROR_IN_PATHTAPE;
++        }
++    } while (response==SYS_MORE);
++
++    rodsLog(LOG_DEBUG,"Received from %s: %s",service,replyBuffer);
++
++	return 0;
++}
++
++int
++adsFileStat (rsComm_t *rsComm, char *filename, struct stat *statbuf)
++{
++	return 0;
++}
++int
++adsFileFstat (rsComm_t *rsComm, int fd, struct stat *statbuf)
++{
++	return 0;
++}
++int
++adsFileMkdir (rsComm_t *rsComm, char *filename, int mode)
++{
++	return 0;
++}
++int
++adsFileChmod (rsComm_t *rsComm, char *filename, int mode)
++{
++	return 0;
++}
++int
++adsFileOpendir (rsComm_t *rsComm, char *dirname, void **outDirPtr)
++{
++	return 0;
++}
++int
++adsFileReaddir (rsComm_t *rsComm, void *dirPtr, struct  dirent **direntPtr)
++{
++	return 0;
++}
++int
++adsFileRename (rsComm_t *rsComm, char *oldFileName, char *newFileName)
++{
++	return 0;
++}
++int
++adsFileRmdir (rsComm_t *rsComm, char *filename)
++{
++	return 0;
++}
++int
++adsFileClosedir (rsComm_t *rsComm, void *dirPtr)
++{
++	return 0;
++}
++
++int
++adsStageToCache (rsComm_t *rsComm, fileDriverType_t cacheFileType,
++int mode, int flags, char *filename,
++char *cacheFilename,  keyValPair_t *condInput)
++{
++	char service[SRQLEN_SERVICE] = "pathsrb";
++	char *user = getenv("ADS_USER");
++	char command[CMDLEN];
++	char replyBuffer[BLOCKSIZE];
++	char tapeID[LEN_VID+1];
++	char *ptr;
++
++    char server[LEN_HOST] = "vtp.data.rl.ac.uk";
++    char recvBuffer[BLOCKSIZE];
++
++	int replyLen=BLOCKSIZE;
++	int response;
++
++    int retCode;
++    tstream streamID;
++
++	if (!user)
++	{
++		user = "IRODSTST";
++	}
++
++	sprintf(command,"get -u %s %s",user,filename);
++	rodsLog(LOG_DEBUG,"Sending to pathtape: %s",command);
++
++	do
++    {
++        response = _sysreqs(service, command, replyBuffer, &replyLen );
++
++        if (response==SYS_MORE)
++        {
++                /* Need to get more info from sysreq, last line of reply is the command to send */
++                replyBuffer[replyLen-1]='\0';
++                ptr=strrchr(replyBuffer,'\n');
++
++                if (ptr!=NULL)
++                {
++                        ptr++;
++                        (void) strcpy(command,ptr);
++                        *ptr='\0';
++                        puts(replyBuffer);
++                }
++                else
++                {
++                        strcpy(command,replyBuffer);
++                }
++        }
++		else if (response<0)
++		{
++			rodsLog(LOG_ERROR,"Error from pathtape: %d, %s",response,tapstr());
++			return ADS_ERROR_IN_PATHTAPE;
++		}
++    } while (response==SYS_MORE);
++
++	rodsLog(LOG_DEBUG,"Received from pathtape: %s",replyBuffer);
++
++	strncpy(tapeID,replyBuffer,LEN_VID);
++	tapeID[LEN_VID]='\0';
++	/* Now tapeID[] holds the VID of the tape we are after, so use it to download from ADS */
++	rodsLog(LOG_DEBUG,"Got tape ID %s",tapeID);
++
++	streamID = topen( server, tapeID, taperead,user,NOSHADOW,60);
++
++    if (streamID <= 0)
++    {
++    /* Error returned */
++        rodsLog(LOG_ERROR,"Error on VTP open: %d, message %s\n",streamID,tapstr() );
++        return ADS_ERROR_IN_VTP_OPEN;
++    }
++
++    FILE *fp = fopen(cacheFilename,"w+");
++
++    if (fp == NULL)
++    {
++        rodsLog(LOG_ERROR,"Could not open file %s",cacheFilename);
++        return FILE_OPEN_ERR;
++    }
++
++    do
++    {
++        retCode = tread( streamID,recvBuffer,BLOCKSIZE);
++        if (retCode > 0 )
++        {
++        	fwrite(recvBuffer,sizeof(char),retCode,fp);
++		}
++		else if (retCode < 0 && retCode != -2)
++		{
++        /* Error returned */
++            rodsLog(LOG_ERROR,"Error reading from tape: %d, message %s\n",retCode,tapstr() );
++            return ADS_ERROR_IN_TAPE_READ;
++        }
++
++    } while ( retCode > 0 );
++	
++	fclose(fp);
++	tclose(streamID,ACTION_OK,0);
++	return ADS_SUCCESS;
++}
++
++int
++adsSyncToArch (rsComm_t *rsComm, fileDriverType_t cacheFileType,
++int mode, int flags, char *filename,
++char *cacheFilename,  keyValPair_t *condInput)
++{
++/*	
++	Sync a file from cache resource to ADS
++	cacheFilename is the physical filename of the file in the cache resource
++	filename is the name to be used on the ADS resource
++
++	Uses sysreq to interact with the pathtape server
++*/
++
++	char service[SRQLEN_SERVICE] = "pathsrb";
++    char *user = getenv("ADS_USER");
++    char command[CMDLEN];
++    char replyBuffer[BLOCKSIZE];
++    char tapeID[LEN_VID+1];
++    char *ptr;
++
++    char server[LEN_HOST] = "vtp.data.rl.ac.uk";
++    char writeBuffer[BLOCKSIZE];
++
++    int replyLen=BLOCKSIZE;
++    int response;
++
++	int j;
++/*	struct RECLIST *r = NULL; */
++    tstream streamID;
++
++	size_t numBlocks;
++	size_t endAmount;
++	struct stat fileInfo;
++	size_t cacheFileSize;
++
++	int tapeExists = FALSE;
++
++	memset(tapeID,'\0',LEN_VID);
++
++    if (!user)
++    {
++        user = "IRODSTST";
++    }
++
++    sprintf(command,"create -u %s %s",user,filename);
++	
++    do
++    {
++        replyLen=BLOCKSIZE;
++        response = _sysreqs(service, command, replyBuffer, &replyLen );
++
++        if (response==SYS_MORE)
++        {
++                /* Need to get more info from sysreq, last line of reply is the command to send */
++                replyBuffer[replyLen-1]='\0';
++                ptr=strrchr(replyBuffer,'\n');
++
++                if (ptr!=NULL)
++                {
++                        ptr++;
++                        (void) strcpy(command,ptr);
++                        *ptr='\0';
++                        puts(replyBuffer);
++                }
++                else
++                {
++                        strcpy(command,replyBuffer);
++                }
++        }
++		else if (response==1)
++		{
++			/* The path already exists in pathtape database, so use sysreq path get to retrieve it */
++			sprintf(command,"get -u %s %s",user,filename);
++			rodsLog(LOG_NOTICE,"File already exists in pathtape, will retrieve VID");
++			response=SYS_MORE; /* Make sure we go around the loop again */
++			tapeExists = TRUE;
++		}
++		else if (response==3)
++		{
++			/* Error encountered, 3 means we are not authorised to create tapes */
++			rodsLog(LOG_ERROR,"Error from pathtape: %d, %s",response,tapstr());
++			return ADS_ERROR_IN_PATHTAPE;
++		}
++		else if (response<0)
++		{
++			rodsLog(LOG_ERROR,"Error from pathtape: %d, %s",response,tapstr());
++			return ADS_ERROR_IN_PATHTAPE;
++		}
++
++    } while (response==SYS_MORE);
++
++	/* Need to extract the assigned tape VID from the sysreq output */
++	strncpy(tapeID,replyBuffer,LEN_VID);
++	tapeID[LEN_VID]='\0';
++
++	/* Now need to create the tape we have been given */
++	/* But only if it did not already exist? */
++	if (!tapeExists)
++	{
++			strcpy(service,"flfsys");	
++			sprintf(command,"create %s %s 160GB",user,tapeID);
++
++			rodsLog(LOG_DEBUG,"Sending command %s to flfsys...",command);
++
++			response = _sysreqs(service,command,replyBuffer, &replyLen);
++
++			rodsLog(LOG_DEBUG,"Got response %d - %s from flfsys...",response,replyBuffer);
++
++			if (response!=SYS_OK && response!=3)
++			{
++					rodsLog(LOG_ERROR,"Error creating tape: %d, %s",response,tapstr());
++					return ADS_ERROR_IN_FLFSYS_CREATE;
++			}
++	}
++
++	/* Compute the number of blocks we will be writing, plus the amount left over at the end */
++	response = stat(cacheFilename,&fileInfo);
++	if (response < 0)
++	{
++		rodsLog(LOG_ERROR,"Could not stat() cache file %s, error %d - %s",cacheFilename,errno,strerror(errno));
++		return UNABLE_TO_STAT_FILE;
++	}
++	cacheFileSize = (size_t) fileInfo.st_size;
++	numBlocks = cacheFileSize / BLOCKSIZE;
++	endAmount = cacheFileSize % BLOCKSIZE;
++
++	rodsLog(LOG_DEBUG,"Writing %d bytes comprising %d blocks with %d at the end",cacheFileSize,numBlocks,endAmount);
++	/* Open both the cache file and a descriptor for a tape stream in ADS */
++	FILE *fp = fopen(cacheFilename,"r");
++	if (fp == NULL)
++	{
++        rodsLog(LOG_ERROR,"Could not open file %s",cacheFilename);
++        return FILE_OPEN_ERR;
++    }		
++
++	rodsLog(LOG_DEBUG,"Got tapeID %s",tapeID);
++
++	streamID = topen( server, tapeID, tapewrite,user,NOSHADOW,60);
++	rodsLog(LOG_DEBUG,"Opened tape with stream ID %d",streamID);
++
++	if (streamID <= 0)
++    {
++    /* Error returned */
++        rodsLog(LOG_ERROR,"Error on VTP open: %d, message %s\n",terrno,tapstr() );
++		fclose(fp);
++        return ADS_ERROR_IN_VTP_OPEN;
++    }
++
++	/* Setup the record info for the tape and define the blocksize to be used */
++	adsInitAdsStreams(streamID);
++/*	adsWriteLabels(streamID, tapeID, user); */
++	tsetblk(streamID,BLOCKSIZE);
++
++	rodsLog(LOG_DEBUG,"Done writing labels, commencing data transfer");
++
++	for (j=0;j<numBlocks;j++)
++	{
++/*		rodsLog(LOG_DEBUG,"Writing block %d",j); */
++	/* Loop around numBlocks times reading from cache file and writing to tape */
++	/* This loop is skipped of course if the file is smaller than a single block */
++		response = fread(writeBuffer,1,BLOCKSIZE,fp);
++		if (response < 0)
++		{
++			rodsLog(LOG_ERROR,"Error reading from cache file, %d",errno);
++			fclose(fp);
++			return FILE_READ_ERR;
++		}
++
++		response = twrite(streamID,writeBuffer,BLOCKSIZE);
++		if (response < 0)
++		{
++			rodsLog(LOG_ERROR,"Error writing to ADS,%d, message %s",response,tapstr());
++			fclose(fp);
++			return ADS_ERROR_IN_TAPE_WRITE;
++		}	
++	}
++	/* Now do the last bit of the file */
++	response = fread(writeBuffer,1,endAmount,fp);
++	if (response < endAmount)
++	{
++			rodsLog(LOG_ERROR,"Error reading from cache file, %d",errno);
++			fclose(fp);
++			return FILE_READ_ERR;
++	}
++
++/*	rodsLog(LOG_DEBUG,"Writing end amount"); */
++	response = twrite(streamID,writeBuffer,endAmount);
++	if (response < 0)
++	{
++			rodsLog(LOG_ERROR,"Error writing to ADS,%d, message %s",response,tapstr());
++			fclose(fp);
++			return ADS_ERROR_IN_TAPE_WRITE;
++	}
++
++	fclose(fp);
++
++	/* Write end of file to ADS file
++	r = adsStreams[streamID].rStream;
++
++	if (r != NULL)
++	{
++		if(wreof(r) != 0)
++		{
++			return ADS_ERROR_ON_CLOSE;
++		}
++	}
++
++*/
++	rodsLog(LOG_DEBUG,"Closing stream %d",streamID);
++	if(endAmount > 0)
++	{
++		tctl(streamID,oppar,1);
++	}
++	tctl(streamID,opwtm,1);
++	if (tclose(streamID,ACTION_OK,0) < TAPE_OK)
++	{
++		rodsLog(LOG_DEBUG,"Error on VTP close %d - %s",terrno,tapstr());
++		return ADS_ERROR_IN_VTP_CLOSE;
++	}
++	return ADS_SUCCESS;
++}
++
++int 
++adsReadTapeLabels(int ts, char *tapename)
++{
++	/* Quick and dirty implementation, assuming standard labeled tapes
++	 *        with VOL1, HDR1, and HDR2 labels, each 80 chars 
++	 *            */
++	
++	char buffer[81];
++	int nread;
++	int status;
++	int blen;
++	
++	status = ADS_SUCCESS;
++	
++	/* Read VOL1 */
++	if ((nread = tread(ts, buffer, 80)) <= 0 ) 
++	{
++		status = ADS_ERROR_READING_TAPE_LABELS;
++	}
++	else 
++	{
++		buffer[nread] = '\0';
++	}
++	
++	/* Read HDR1 */
++	if ((nread = tread(ts, buffer, 80)) <= 0 )
++	{
++		status = ADS_ERROR_READING_TAPE_LABELS;
++	}
++	else
++	{
++		buffer[nread] = '\0';
++	}
++	
++	/* Read HDR2 */
++	if ((nread = tread(ts, buffer, 80)) <= 0 ) 
++	{
++		status = ADS_ERROR_READING_TAPE_LABELS;
++	}
++	else 
++	{
++		buffer[nread] = '\0';
++	}
++	
++	/* Read tape mark */
++	nread=treadblk(ts, buffer, 1, &blen);
++	
++	return (status); 
++}
++
++int 
++adsInitAdsStreams(int ts)        
++{
++	int status;
++	rodsLog(LOG_DEBUG,"In adsInitAdsStreams with stream ID %d",ts);
++
++	status = ADS_SUCCESS;
++
++	if ((ts > 0) && (ts < MAX_TSTREAM))
++	{
++			adsStreams[ts].rStream = NULL;
++			adsStreams[ts].fileWriteSize = 0;
++	}
++	else 
++	{
++			status = ADS_UNKNOWN_ERROR;
++	}
++	return(status);
++}
++
++int adsWriteLabels(int ts, char* tapeName, char* tapeOwner)
++{
++	struct RECLIST *r = malloc(sizeof(struct RECLIST));
++	int status;
++
++	rodsLog(LOG_DEBUG,"In adsWriteLabels with tapeID %s and tape owner %s",tapeName,tapeOwner);
++	
++	/* Initialise the record structure */
++	if (r != NULL)
++	{
++		status = initRecordStruct( r );
++		if (status == ADS_ERROR_ALLOCATING_MEMORY)
++		{
++			return status;
++		}
++	}
++
++	/* Fill in missing record info */
++	r->ts = ts;
++	r->fmode = filewrite;
++	r->access = filewrite;
++
++	strncpy(r->finfo.f_dsn,tapeName,LEN_VID);
++	strncpy(r->tapowner, tapeOwner, strlen(tapeOwner));
++	strncpy(r->vsn, tapeName, LEN_VID);
++	r->vsn[LEN_VID] = '\0';
++	r->tapowner[strlen(tapeOwner)] = '\0';
++	r->finfo.f_dsn[LEN_VID] = '\0';
++
++	/* Now we must write volume labels and headers */
++	status = writeVolumeLabels( r );
++
++	if (status == ADS_ERROR_WRITING_TAPE_LABELS)
++	{
++		return status;
++	}
++/*	status = writeVolumeHeaders( r ); */
++
++	if (status == ADS_ERROR_WRITING_TAPE_LABELS)
++	{
++		return status;
++	}
++	adsStreams[ts].rStream = r;
++	return 0;
++
++}
++
++
++int initRecordStruct( struct RECLIST *r )
++{
++	struct FILEINFO *finfo;
++    struct tm *mytm;     /* Current time */
++    time_t longtime;     /* Current time in secs since 1Jan70 */
++
++	rodsLog(LOG_DEBUG,"In initRecordStruct");
++    /* Setup the default values for the block */
++    r->ts            = 0;
++    r->rblen         = 0;
++    r->inbytesleft   = 0;
++    r->wrused        = 0;
++    r->out_cur_bsize = RECBIGSIZE;
++    r->eot           = FALSE;
++    r->weot          = FALSE;
++    r->eofdone       = FALSE;
++    r->hdrdone       = FALSE;
++    r->ineof         = FALSE;
++    r->pastsilver    = FALSE;
++    r->vsnignore     = FALSE;
++    r->silverignore  = FALSE;
++    r->filenum       = 1;    /* About to do the first file */
++    r->fmode         = 0;
++    r->rbuf          = NULL;
++    r->access        = 0;
++    r->labmode       = sl;
++    r->tapowner[0]   = '\0';
++    r->vsn[0]        = '\0';
++
++    /* Set up finfo */
++    finfo = &r->finfo;
++    terrno=TAPE_OK;
++	/* Set the expiry date and generation date to today */
++    rexpdate(finfo,0);
++    longtime=time(NULL);
++    mytm=localtime(&longtime);
++    finfo->f_exp.year=mytm->tm_year;
++    finfo->f_exp.yday=mytm->tm_yday;
++    finfo->f_gen.year=finfo->f_exp.year;
++    finfo->f_gen.yday=finfo->f_exp.yday;
++
++    /* Clear the data set name and the system name */
++    finfo->f_dsn[0]='\0';
++    finfo->f_sys[0]='\0';
++
++    /* Set the volume number and sequence number to 1 */
++    finfo->f_vnum=1;
++    finfo->f_seq=1;
++
++    /* Set the remaining fields to something useful - we hope */
++    finfo->f_fmt         =RECu;
++    finfo->f_fmt_force   =FALSE;
++    finfo->f_reclen      =RECBIGSIZE;
++    finfo->f_reclen_force=FALSE;
++
++    finfo->f_bsize       =RECBIGSIZE;
++    finfo->f_bsize_force =FALSE;
++
++	/* Clear a few items */
++    finfo->f_bnum=0;
++    finfo->f_nbytes=0;
++    finfo->f_numpad=0;
++    finfo->f_fixpad=FALSE;
++
++    return(TAPE_OK);
++
++
++}	
++
++int writeVolumeLabels( struct RECLIST *r )
++{
++	char label[81];
++	rodsLog(LOG_DEBUG,"In writeVolumeLabels");
++	
++	if (r->labmode==sl) {
++			/* IBM Standard Label tape */
++			/* [#] taken from OS/VS tape labels GC26-3795-3 page 47 */
++			sprintf(label,"VOL1%-6.6s%c%10s%10s%10s%-10.10s%29s",
++							r->vsn,              /* [3] Volume Serial Number */
++							(char)0x00,              /* [4] Reserved             */
++							"",                      /* [5] VTOC pointer (blank) */
++							"",                      /* [6] Reserved             */
++							"",                      /* [7] Reserved             */
++							r->tapowner,             /* [8] Owner name code      */
++							""                       /* [9] Reserved             */
++				   );
++	} else {
++			/* ANSI Label tape */
++			/* [#] taken from OS/VS tape labels GC26-3795-3 page 85 */
++			sprintf(label,"VOL1%-6.6s%c%20s%6s%-14.14s%28s1",
++							r->vsn,        /* [3] Volume Serial Number */
++							' ',                     /* [4] Accessibility        */
++							"",                      /* [5] Reserved             */
++							"",                      /* [6] Reserved             */
++							r->tapowner,   /* [7] Owner name code      */
++							""                       /* [8] Reserved             */
++				   );
++	}
++
++	put_label(r,label);
++	if (terrno==TAPE_OK || terrno==TAPE_SILVER) {
++			tctl(r->ts, opwtm, 1);
++	}
++	if (terrno==TAPE_OK || terrno==TAPE_SILVER){
++			tctl(r->ts, opbsr, 1);
++	}
++	if (terrno==TAPE_MARK)
++			terrno=TAPE_OK;
++
++	return(terrno);
++}
++
++int put_label(struct RECLIST *r, char *label)
++{
++	int rc;
++
++	rodsLog(LOG_DEBUG,"In put_label with label %s of length %d",label, strlen(label));
++	upcase(label);    /* Ensure it is upper case */
++
++	if (r->labmode==sl) rasctoeb(label,80);
++
++	/* Write the label */
++	if ((rc=twrite(r->ts, label, 80)) != 80) {
++		if (terrno==TAPE_SILVER) {
++				r->pastsilver=TRUE;
++				if (r->silverignore) terrno=TAPE_OK;
++		}
++	}
++
++	rodsLog(LOG_DEBUG,"Done writing label, terrno = %d",terrno);
++	return(terrno);
++}
++
++int writeVolumeHeaders( struct RECLIST *r )
++{
++	terrno=TAPE_OK;
++	rodsLog(LOG_DEBUG,"In writeVolumeHeaders");
++
++	if (r->labmode==sl || r->labmode==al) {   /* Write the HDR records */
++			if (writeskel(r,skelhdr)!=TAPE_OK) return(terrno);
++			tctl(r->ts,opwtm,1);  /* Write a tape mark */
++	}
++
++	r->hdrdone=TRUE;
++	return(terrno);
++}
++
++int writeskel(struct RECLIST *r, enum SKELTYPE stype)
++/*  stype -  Type of skeleton "HDR", "EOF" or "EOV" */
++{
++	char label[81];
++	char *fileid;              /* Name of file for label */
++	char *sname;               /* Skeleton name          */
++	int  myreclen;             /* Chosen file record len */
++	int  myyear1,myyear2; char myind1,myind2;   /* Y2k compliance         */
++
++	terrno=TAPE_OK;
++	rodsLog(LOG_DEBUG,"In writeskel with stream ID %d",r->ts);
++
++	if (tsetblk(r->ts,80)!=TAPE_OK) 
++			return(terrno);  /* Set the block size */
++
++	/* Sort out the file name required on the tape */
++	if (strlen(r->finfo.f_dsn)!=0) fileid=r->finfo.f_dsn;
++	else                           fileid="stdin";
++
++	/* Get the local host name */
++	if (gethostname(r->finfo.f_sys,MAX_SYS)!=0) {
++			strcpy(r->finfo.f_sys,"*Unknown*");
++	}
++	r->finfo.f_sys[MAX_SYS]='\0';  /* Just in case */
++
++	/* Sort out the label characters from the type */
++	switch (stype) {
++			case skelhdr:   sname="HDR";   break;
++			case skeleof:   sname="EOF";   break;
++			case skeleov:   sname="EOV";   break;
++			default:
++							/* rmsg("ERROR in WRITESKEL - unknown stype=%d",stype);*/
++							return(99);
++	}
++
++	/* In the label below, the number in square brackets before each */
++	/* field definition comment indicates the field number given in  */
++	/* the IBM OS/VS Tape Labels manual (GC26-3795-3) on page 50.    */
++	/* For year two thousand compliance we understand that the two characters
++	 *       of the year field are to be prefaced with a blank for 19XX and a
++	 *             character zero for 20XX                                       */
++	if(r->finfo.f_gen.year > 99) /*after 1999*/
++	{
++			myyear1 = r->finfo.f_gen.year - 100;/*this ceases to work in 2099
++												  so is just a temporary fix*/
++			myind1 = '0';
++	}
++	else
++	{
++			myyear1 = r->finfo.f_gen.year;
++			myind1 = ' ';
++	}
++	if(r->finfo.f_exp.year > 99) /*after 1999*/
++	{
++			myyear2 = r->finfo.f_exp.year - 100;/*this ceases to work in 2099
++												  so is just a temporary fix*/
++			myind2 = '0';
++	}
++	else
++	{
++			myyear2 = r->finfo.f_exp.year;
++			myind2 = ' ';
++	}
++	sprintf(label,
++					"%-3s1%-17.17s%-6.6s%04d%04d%-6s%c%02d%03d%c%02d%03d%c%06d%-13.13s%-7s", 
++					sname,                           /* [  1] Label identifier        */
++					fileid,                          /* [  3] Data set identifier     */
++					r->vsn,                          /* [  4] Data set serial number  */
++					r->finfo.f_vnum,                 /* [  5] Volume sequence number  */
++					r->filenum,                      /* [  6] DS/File sequence number */
++					"",                              /* [7/8] Generation information  */
++					myind1,
++					myyear1,                         /* [  9] Creation date           */
++					r->finfo.f_gen.yday,
++					myind2,
++					myyear2,                         /* [ 10] Expiry date             */
++					r->finfo.f_exp.yday,
++					(r->labmode==al)?' ':'0',        /* [ 11] Accessibility           */
++					r->finfo.f_bnum,                 /* [ 12] Block count             */
++					r->finfo.f_sys,                  /* [ 13] System code             */
++					"");                             /* [ 14] Reserved                */
++
++	put_label(r,label);
++	if (terrno!=TAPE_OK && terrno!=TAPE_SILVER) return(terrno);
++
++	if (r->finfo.f_fmt==RECu) myreclen=0;
++	else                      myreclen=r->finfo.f_reclen;
++
++	sprintf(label,"%-3s2%c%05d%05d%-23s%c%-41s",
++					sname,                           /* [  1] Label identifier        */
++					get_rform(r),                   /* [  3] Record Format F/V/D/U   */
++					r->finfo.f_bsize,                /* [  4] Block Length            */
++					myreclen,                        /* [  5] Record Length           */
++					"",
++					get_battr(r),                   /* [ 12] Block Attributes        */
++					"");
++
++	put_label(r,label);
++	return(terrno);
++}
++
++void mygetdate(char *dbuf, int *outyear, int *outday)
++/* dbuf     - Label date buffer */
++/* outyear  - Output year value */
++/* outday   - Output day value  */
++{
++	char buf[6];
++	
++	strncpy(buf,dbuf,6);
++	buf[5]='\0';
++	
++	sscanf(buf,"%2d%3d",outyear,outday);
++	/*fprintf(stderr,"GETDATE: Str=%s Date=%d/%d",
++	*                         buf,*outyear,*outday);*/
++}
++
++/* GET_RFORM - Return a character that represents the record format. */
++/*             We use F (Fixed); V (Variable); U (Undefined) and     */
++/*             D (Decimal zoned).                                    */
++char get_rform(struct RECLIST *r)
++{
++	rodsLog(LOG_DEBUG,"In get_rform");
++	switch (r->finfo.f_fmt) {
++		case RECf:
++		case RECfb:   return('F');
++
++		case RECv:
++		case RECvb:
++		case RECvs:
++		case RECvbs:  return('V');
++
++		case RECu:    return('U');
++
++		case RECd:
++		case RECdb:   return('D');
++
++		case RECcos:  return('C');
++
++		default:
++	  /*rmsg("Internal Error in GET_RFORM/LABEL.C");*/
++					  return('*');
++	}
++}
++
++/* GET_BATTR - Get the block attributes and return as a character. */
++/*             We use 'B' (Blocked); 'S' (Spanned); 'R' (both) and */
++/*             ' ' space (neither).                                */
++char get_battr(struct RECLIST *r)
++{
++	rodsLog(LOG_DEBUG,"In get_battr");
++	switch (r->finfo.f_fmt) {
++			case RECcos:
++			case RECf:
++			case RECv:
++			case RECu:
++			case RECd:   return(' ');   /* One record per block */
++
++			case RECfb:
++			case RECvb:
++			case RECdb:  return('B');   /* Many records per block */
++
++			case RECvbs: return('R');   /* Blocked and Spanned */
++
++			case RECvs:  return('S');   /* Spanned */
++
++			default:
++						 /*rmsg("Internal Error in GET_BATTR/LABEL.C");*/
++						 return('*');
++	}
++}
++
++/* R_UPCASE - Convert a string to upper case */
++void upcase(char *s)
++{
++	for (; *s!='\0'; s++) *s=toupper(*s);
++}
++
++int writevol(struct RECLIST *r)
++{
++	char label[81];
++
++	rodsLog(LOG_DEBUG,"In writevol");
++	if (r->labmode==sl) {
++			/* IBM Standard Label tape */
++			/* [#] taken from OS/VS tape labels GC26-3795-3 page 47 */
++			sprintf(label,"VOL1%-6.6s%c%10s%10s%10s%-10.10s%29s",
++							r->vsn, 	          /* [3] Volume Serial Number */
++							(char)0x00,              /* [4] Reserved             */
++							"",                      /* [5] VTOC pointer (blank) */
++							"",                      /* [6] Reserved             */
++							"",                      /* [7] Reserved             */
++							r->tapowner,	          /* [8] Owner name code      */
++							""                       /* [9] Reserved             */
++				   );
++	} else {
++			/* ANSI Label tape */
++			/* [#] taken from OS/VS tape labels GC26-3795-3 page 85 */
++			sprintf(label,"VOL1%-6.6s%c%20s%6s%-14.14s%28s1",
++							r->vsn,        /* [3] Volume Serial Number */
++							' ',                     /* [4] Accessibility        */
++							"",                      /* [5] Reserved             */
++							"",                      /* [6] Reserved             */
++							r->tapowner,   /* [7] Owner name code      */
++							""                       /* [8] Reserved             */
++				   );
++	}
++
++	put_label(r,label);
++	if (terrno==TAPE_OK || terrno==TAPE_SILVER) {
++			tctl(r->ts, opwtm, 1);
++	}
++	if (terrno==TAPE_OK || terrno==TAPE_SILVER){
++			tctl(r->ts, opbsr, 1);
++	}
++	if (terrno==TAPE_MARK) 
++			terrno=TAPE_OK;
++
++	return(terrno);
++}
++
++int wrvol(struct RECLIST *r)
++{
++	terrno=TAPE_OK;
++	rodsLog(LOG_DEBUG,"in wrvol");
++	if (tsetblk(r->ts, 80) != TAPE_OK) {
++			return(terrno);
++	}
++
++	switch (r->access) {
++			case tapewrite:
++					switch (r->labmode) {
++							case blp:   case nl:
++									return(terrno);        /* No need to do anything */
++
++							case al:    case sl:
++									return(writevol(r));  /* Write new VOL labels */
++
++							default:
++									return(99);
++					}
++					break;
++
++			case tapeupdate:
++					switch (r->labmode) {
++							case blp:
++									return(terrno);        /* No need to do anything */
++
++							case al:    case sl:   case nl:   case labany:
++									/* Handle case where tape really is empty */
++									if (chekvol(r)==TAPE_AFTER) {
++											if (r->labmode==labany) 
++													r->labmode=sl;
++											writevol(r);
++									}
++									return(terrno);
++
++							default:
++									return(99);
++					}
++					break;
++
++			default:
++					return(99);
++	}
++
++	return(terrno);   /* No problem! */
++}
++
++/* WREOF - Do the End Of File processing depending upon the tape type */
++int wreof(struct RECLIST *r)
++{
++	int status;
++	rodsLog(LOG_DEBUG,"In wreof");
++
++	status = do_wrend(r, skeleof);
++	return(status);
++}
++
++/* WREOV - Do the End Of Volume processing */
++int wreov(struct RECLIST *r)
++{
++	rodsLog(LOG_DEBUG,"In wreov");
++	return(do_wrend(r,skeleov));
++}
++
++
++/* do_wrend - Write the end of file/volume labels as required */
++int do_wrend(struct RECLIST *r, enum SKELTYPE stype)
++{
++
++	terrno=TAPE_OK;
++	rodsLog(LOG_DEBUG,"In do_wrend");
++
++	if (r->labmode==sl || r->labmode==al) {
++/*			tctl(r->ts,opwtm,1); */
++			if (terrno!=TAPE_OK && terrno!=TAPE_SILVER) return(terrno);
++
++			writeskel(r,stype);
++			if (terrno!=TAPE_OK && terrno!=TAPE_SILVER) return(terrno);
++	}
++
++/*	tctl(r->ts,opwtm,2); */
++	if (terrno!=TAPE_OK && terrno!=TAPE_SILVER) return(terrno);
++
++/*	tctl(r->ts,opbsf,1); */
++	return(terrno);
++}
++
++/* CHEKVOL - Check the label type and that it is correct */
++int chekvol(struct RECLIST *r)
++{
++	char label[81];        /* Local copy of the label read from tape */
++	char myvsn[LEN_VSN+1]; /* Copy of the space-removed VSN          */
++	enum LABEL mylab;      /* Label type that we found               */
++	int vsnstart,ownstart,ownlen;
++	rodsLog(LOG_DEBUG,"In chekvol");
++
++	mylab=nl;   /* Start with a good default */
++	if (get_label(r,label)) {
++			if (strncmp(label,"VOL1",4)==0) {           /* Got an ANSI tape */
++					mylab=al;
++			} else {
++					rebtoasc(label,80);
++					if (strncmp(label,"VOL1",4)==0) {        /* Got an EBCDIC tape */
++							mylab=sl;
++					} else {
++							mylab=nl;
++					}
++			}
++
++	}
++	if (terrno!=TAPE_OK) return(terrno);   /* Some error occured */
++	if (R_debug) rmsg("CHEKVOL: Found a %s tape.",rlab2char(mylab));
++	if (mylab==nl) tctl(r->ts,oprew,1);
++
++	/* Now check what we've got against what the user asked for. */
++	/* If they haven't specified a type, then we accept it.      */
++	if (r->labmode==labany) {
++			r->labmode=mylab;
++	} else {
++			if (r->labmode!=mylab) {   /* Got wrong type! */
++					if (R_debug) rmsg("CHEKVOL: Requested %s tape, got %s.",
++									rlab2char(r->labmode),rlab2char(mylab));
++					r->labmode=mylab;  /* So user knows what was there */
++					return(terrno=REC_BADLABEL);
++			}
++	}
++
++	/* An NL tape needs no further work */
++	if (mylab==nl) return(terrno);
++
++	if (mylab==al) {   /* ANSII tape */
++			vsnstart=AL_VOL1_VSN;
++			ownstart=AL_VOL1_OWN;
++			ownlen  =AL_OWN_LEN;
++	} else {           /* IBM label tape */
++			vsnstart=SL_VOL1_VSN;
++
++			/* Due to a bodge with the earlier label writing from the */
++			/* very first versions of the tape command, we always put */
++			/* the owner field in the AL position - even for SL tapes */
++			/* So we now read back both versions.         TK 7/12/93  */
++			if (label[AL_VOL1_OWN]!=' ') {
++					if (R_debug) rmsg("CHEKVOL: Using OLD AL owner position");
++					ownstart=AL_VOL1_OWN;
++					ownlen  =AL_OWN_LEN;
++			} else {
++					ownstart=SL_VOL1_OWN;
++					ownlen  =SL_OWN_LEN;
++			}
++	}
++
++	strncpy(myvsn,&(label[vsnstart]),LEN_VSN);
++	myvsn[LEN_VSN]='\0';
++	strncpy(r->tapowner,&(label[ownstart]),ownlen);
++	r->tapowner[ownlen]='\0';
++	despace(r->tapowner);
++	despace(myvsn);
++	if (R_debug) rmsg("CHEKVOL: De-spaced VSN is >>>%s<<<",myvsn);
++
++	if (strcmp(myvsn,r->vsn)!=0) {
++			if (R_debug) rmsg("CHEKVOL: Incorrect VSN mounted (got %s).",
++							myvsn);
++			if (r->vsnignore) {
++					rmsg("Using tape VSN=%s rather than requested VSN=%s",myvsn,r->vsn);
++					strcpy(r->vsn,myvsn);  /* Remember the real VSN */
++			} else {
++					return(terrno=REC_BADVSN);
++			}
++	}
++
++	return(TAPE_OK);
++}
++
++/* GET_LABEL - Get a label image into a buffer - no translation. */
++/* Return TRUE or FALSE.                                         */
++int get_label(struct RECLIST *r, char *label)
++{
++	char *dptr;         /* Pointer whilst reading data in  */
++	int  nread;         /* Control the read in process     */
++	int blksize;        /* Size of first block read        */
++
++	rodsLog(LOG_DEBUG,"In get_label");
++
++	if (R_debug) rmsg("GET_LABEL: Called...");
++	dptr=label;
++
++	if ((nread=treadblk(r->ts,dptr,80,(unsigned int *)&blksize))<0) {
++			if (R_debug) prerror("GET_LABEL");
++			return(FALSE);
++	}
++
++	if (blksize!=80) {  /* This is not a label */
++			if (R_debug) rmsg("GET_LABEL: Not a label (length=%d)",blksize);
++			blksize-=nread;
++			while (blksize>0) { /* Waste the data already in the pipeline */
++					if ((nread=tread(r->ts,dptr,80))<0) {
++							if (R_debug) prerror("GET_LABEL");
++							return(FALSE);
++					}
++					blksize-=nread;
++			}
++			return(FALSE);
++	}
++
++	blksize-=nread;
++	dptr   +=nread;
++
++	while (blksize>0) {
++			if ((nread=tread(r->ts,dptr,blksize))<0) return(FALSE);
++			blksize-=nread;
++			dptr   +=nread;
++			if (R_debug) rmsg("GET_LABEL: %d bytes left of 80.",blksize);
++	}
++
++	label[80]='\0';
++
++	return(TRUE);
++}
++
++/* DESPACE - Remove trailing and leading spaces from a string */
++void despace(char *str)
++{
++	char *from, *to;   /* Pointers for work */
++
++
++	if (*str=='\0') {  /* Empty string */
++			return;
++	}
++
++	if (*str==' ') {  /* We have leading blanks */
++			for (from=str; *from==' '; from++)
++					;
++
++			if (*from=='\0') {  /* Empty string - only spaces! */
++					*str='\0';
++					return;
++			}
++
++			for (to=str; ((*to)=(*from))!='\0'; to++, from++)
++					;
++	} else {          /* No leading blanks, get "to" pointing to end */
++			for (to=str; *to!='\0'; to++)
++					;
++	}
++
++	to--;   /* "to" points to last character in de-pre'd string */
++
++	if (*to==' ') {   /* We have a trailing space here */
++			for (; *to==' '; to--)
++					;
++			*(++to)='\0';
++	}
++
++}
+Index: lib/core/include/rodsErrorTable.h
+===================================================================
+--- lib/core/include/rodsErrorTable.h	(revision 286)
++++ lib/core/include/rodsErrorTable.h	(working copy)
+@@ -468,6 +468,24 @@
+ #define NO_COLUMN_NAME_FOUND                  -1107000
+ #define BREAK_ACTION_ENCOUNTERED_ERR          -1108000
+ #define CUT_ACTION_ON_SUCCESS_PROCESSED_ERR   -1109000
++
++ /* 1,200,000 to 1,250,000 - ADS driver error codes */
++ #define ADS_SUCCESS                             0
++ #define ADS_ERROR_ON_OPEN                      -1201000
++ #define ADS_ERROR_IN_VTP_OPEN                  -1202000
++ #define ADS_ERROR_WRITING_TAPE_LABELS          -1203000
++ #define ADS_ERROR_EXECUTING_PIPED_COMMAND      -1204000
++ #define ADS_ERROR_IN_FLFSYS_CREATE             -1205000
++ #define ADS_ERROR_ON_CLOSE                     -1206000
++ #define ADS_ERROR_IN_VTP_CLOSE                 -1207000
++ #define ADS_ERROR_IN_TAPE_READ                 -1208000
++ #define ADS_ERROR_IN_TAPE_WRITE                -1209000
++ #define ADS_ERROR_FUNC_NOT_SUPPORTED           -1210000
++ #define ADS_ERROR_IN_FLFSYS_DESTROY            -1211000
++ #define ADS_ERROR_IN_PATHTAPE                  -1212000
++ #define ADS_ERROR_READING_TAPE_LABELS          -1213000
++ #define ADS_ERROR_ALLOCATING_MEMORY            -1214000
++ #define ADS_UNKNOWN_ERROR                      -1215000
+ /* 1,600,000 to 1,700,000  - PHP scripting error */
+ #define PHP_EXEC_SCRIPT_ERR                   -1600000
+ #define PHP_REQUEST_STARTUP_ERR               -1601000
+Index: lib/core/include/rcGlobal.h
+===================================================================
+--- lib/core/include/rcGlobal.h	(revision 286)
++++ lib/core/include/rcGlobal.h	(working copy)
+@@ -127,6 +127,7 @@
+   {"test stage",FILE_CAT, TEST_STAGE_FILE_TYPE, DO_CHK_PATH_PERM},
+   {"s3",FILE_CAT, S3_FILE_TYPE, DO_CHK_PATH_PERM},
+   {"MSS universal driver", FILE_CAT, UNIV_MSS_FILE_TYPE,  DO_CHK_PATH_PERM},
++  {"ads",FILE_CAT,ADS_FILE_TYPE,DO_CHK_PATH_PERM},
+ };
+ 
+ int NumRescTypeDef = sizeof (RescTypeDef) / sizeof (rescTypeDef_t);
+Index: lib/core/include/objInfo.h
+===================================================================
+--- lib/core/include/objInfo.h	(revision 286)
++++ lib/core/include/objInfo.h	(working copy)
+@@ -252,6 +252,7 @@
+     TEST_STAGE_FILE_TYPE,
+     S3_FILE_TYPE,
+     UNIV_MSS_FILE_TYPE,
++	ADS_FILE_TYPE,
+ } fileDriverType_t;
+ 
+ #define DEFAULT_FILE_MODE	0600
+Index: Makefile
+===================================================================
+--- Makefile	(revision 286)
++++ Makefile	(working copy)
+@@ -20,8 +20,8 @@
+ 
+ 
+ 
++ADS_LIBS=/usr/lib/libsysreq.a /usr/lib/libvtp.a /usr/lib/librec.a
+ 
+-
+ #
+ # Varibles
+ #

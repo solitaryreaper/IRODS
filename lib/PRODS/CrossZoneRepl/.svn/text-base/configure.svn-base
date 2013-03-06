@@ -1,0 +1,45 @@
+#! /bin/sh
+
+function Usage() {
+   echo "Usage: configure --irods_src_home=irodsdir --install_dir=myinstalldir"
+}
+
+#
+for arg in "$@"
+do
+   case $arg in
+     "--irods_src_home="*) IRODS_SRC_HOME=${arg:17};;
+     "--install_dir="*) INSTALL_DIR=${arg:14};;
+   esac
+done
+
+if [ -z $IRODS_SRC_HOME ]
+then
+  echo "irods_src_home is not defined."
+  Usage
+  echo ""
+  exit 1
+fi
+
+# create Makefile
+rm -f Makefile
+touch Makefile
+echo "IRODS_SRC_HOME="$IRODS_SRC_HOME >> Makefile
+echo "INSTALL_DIR="$INSTALL_DIR >> Makefile
+cat Makefile.in >> Makefile
+
+# create run_CrossZoneRepl.sh
+rm -f run_CrossZoneRepl.sh
+touch run_CrossZoneRepl.sh
+echo "#!/bin/bash" >> run_CrossZoneRepl.sh
+echo "" >> run_CrossZoneRepl.sh
+echo "LOG="$INSTALL_DIR"/CrossZoneRepl/irods_repl.log" >> run_CrossZoneRepl.sh
+echo "" >> run_CrossZoneRepl.sh
+echo "pushd "$INSTALL_DIR"/CrossZoneRepl > /dev/null" >> run_CrossZoneRepl.sh
+echo "        ./CrossZoneRepl -configfile=crosszonerepl.cfg >> \$LOG 2>&1" >> run_CrossZoneRepl.sh
+echo "popd > /dev/null" >> run_CrossZoneRepl.sh
+echo "" >> run_CrossZoneRepl.sh
+echo "exit 0" >> run_CrossZoneRepl.sh
+chmod u+x run_CrossZoneRepl.sh
+
+# done

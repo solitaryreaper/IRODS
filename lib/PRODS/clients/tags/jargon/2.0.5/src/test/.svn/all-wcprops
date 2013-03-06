@@ -1,0 +1,125 @@
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test
+END
+Utils.java
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/Utils.java
+END
+Sls.java
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/Sls.java
+END
+iadmin.java
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/iadmin.java
+END
+Srm.java
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/Srm.java
+END
+Sget.java
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/Sget.java
+END
+MetaDataDelete.java
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/MetaDataDelete.java
+END
+CopyTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/CopyTest.java
+END
+Test.java
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/Test.java
+END
+MetaDataTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/MetaDataTest.java
+END
+irule.java
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/irule.java
+END
+Spcommand.java
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/Spcommand.java
+END
+IRODSMetaDataTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/IRODSMetaDataTest.java
+END
+GSITest.java
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/GSITest.java
+END
+MainTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/MainTest.java
+END
+MoreTests.java
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/MoreTests.java
+END
+ShadowFileTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/ShadowFileTest.java
+END
+AnalyzeVolumeSliceExample.java
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/AnalyzeVolumeSliceExample.java
+END
+Smkdir.java
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/Smkdir.java
+END
+Scat.java
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/Scat.java
+END
+Sput.java
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/test/Sput.java
+END

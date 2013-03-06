@@ -1,0 +1,16 @@
+Index: config/config.mk.in
+===================================================================
+--- config/config.mk.in	(revision 209)
++++ config/config.mk.in	(working copy)
+@@ -256,9 +256,9 @@
+ COMPAT_201=1
+ 
+ # Kerberos authentication
+-# KRB_AUTH = 1
++KRB_AUTH = 1
+ ifdef KRB_AUTH
+-KRB_LOC=/usr/kerberos
++KRB_LOC=/usr
+ endif
+ 
+ # Syslog logging

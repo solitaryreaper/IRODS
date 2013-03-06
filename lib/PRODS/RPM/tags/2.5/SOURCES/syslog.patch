@@ -1,0 +1,698 @@
+Index: config/config.mk.in
+===================================================================
+--- config/config.mk.in	(revision 142)
++++ config/config.mk.in	(revision 199)
+@@ -245,3 +245,6 @@
+ ifdef KRB_AUTH
+ KRB_LOC=/usr
+ endif
++
++# Syslog logging
++#IRODS_SYSLOG = 1
+Index: lib/core/include/rodsLog.h
+===================================================================
+--- lib/core/include/rodsLog.h	(revision 142)
++++ lib/core/include/rodsLog.h	(revision 199)
+@@ -4,42 +4,80 @@
+ 
+ #include "rodsError.h"
+ 
+-#define LOG_SQL 9
++#ifdef IRODS_SYSLOG
++#define LOG_SQL 11
+ /* This is for logging SQL statements.  These are only logged when
+    specifically requested and so are a high priority at this level. */
+ 
+-#define LOG_SYS_FATAL 8
+-/* This is used of errors that mean that the system (not just one
+-   server, client, or user) cannot continue.  An example is when the
+-   server is unable to talk to the database. */
++#define LOG_DEBUG3  10
++#define LOG_DEBUG2  9
++#define LOG_DEBUG1  8
++#define LOG_DEBUG   7
++/*
++  The DEBUG messages are for the software engineer to analyze and
++  debug operations.  These are typically added during development and
++  debug of the code, but can be left in place for possible future
++  use.  In many cases, one would be able start seeing these messages
++  via a command-line argument to adjust the rodsLog verbosity level.
++*/
+ 
+-#define LOG_SYS_WARNING 7
++#define LOG_NOTICE  5
++/* This is informational only, part of the normal operation but will
++   often be of interest. */
++
++#define LOG_ERROR  3
++/* This means that the function cannot complete what it was asked to
++   do, probably because of bad input from the user (an invalid host
++   name, for example). */
++
++#define LOG_SYS_WARNING 2
+ /* This means a system-level problem occurred that is not fatal to the
+    whole system (it can continue to run), but does indicate an internal
+    inconsistency of some kind.  An example is a file with a physical
+    size that is different than that recorded in the database.
+ */
++#define LOG_SYS_FATAL 1
++/* This is used of errors that mean that the system (not just one
++   server, client, or user) cannot continue.  An example is when the
++   server is unable to talk to the database. */
++#else /* IRODS_SYSLOG */
++#define LOG_SQL 9
++/* This is for logging SQL statements.  These are only logged when
++ *    specifically requested and so are a high priority at this level. */
+ 
++#define LOG_SYS_FATAL 8
++/* This is used of errors that mean that the system (not just one
++ *    server, client, or user) cannot continue.  An example is when the
++ *       server is unable to talk to the database. */
++
++#define LOG_SYS_WARNING 7
++/* This means a system-level problem occurred that is not fatal to the
++ *    whole system (it can continue to run), but does indicate an internal
++ *       inconsistency of some kind.  An example is a file with a physical
++ *          size that is different than that recorded in the database.
++ *          */
++
+ #define LOG_ERROR  6
+ /* This means that the function cannot complete what it was asked to
+-   do, probably because of bad input from the user (an invalid host
+-   name, for example). */
++ *    do, probably because of bad input from the user (an invalid host
++ *       name, for example). */
+ 
+ #define LOG_NOTICE  5
+ /* This is informational only, part of the normal operation but will
+-   often be of interest. */
++ *    often be of interest. */
+ 
+ #define LOG_DEBUG   4
+ #define LOG_DEBUG3  3
+ #define LOG_DEBUG2  2
+ #define LOG_DEBUG1  1
+ /*
+-  The DEBUG messages are for the software engineer to analyze and
+-  debug operations.  These are typically added during development and
+-  debug of the code, but can be left in place for possible future
+-  use.  In many cases, one would be able start seeing these messages
+-  via a command-line argument to adjust the rodsLog verbosity level.
+-*/
++ *   The DEBUG messages are for the software engineer to analyze and
++ *     debug operations.  These are typically added during development and
++ *       debug of the code, but can be left in place for possible future
++ *         use.  In many cases, one would be able start seeing these messages
++ *           via a command-line argument to adjust the rodsLog verbosity level.
++ *           */
++#endif /* IRODS_SYSLOG */
+ 
+ #ifdef  __cplusplus
+ extern "C" {
+Index: lib/core/src/rodsLog.c
+===================================================================
+--- lib/core/src/rodsLog.c	(revision 142)
++++ lib/core/src/rodsLog.c	(revision 199)
+@@ -3,6 +3,12 @@
+ 
+ #include "rods.h"
+ 
++#ifdef IRODS_SYSLOG
++#ifndef windows_platform
++#include <syslog.h>
++#endif
++#endif
++
+ #include "rodsLog.h"
+ #include "rcGlobalExtern.h"
+ #include "rcMisc.h"
+@@ -822,7 +828,6 @@
+ static int sqlVerbosityLevel=0;
+ static pid_t myPid=0;
+ 
+-
+ #ifdef windows_platform
+ static void rodsNtElog(char *msg);
+ #endif
+@@ -841,14 +846,32 @@
+    FILE *errOrOut;
+    va_list ap;
+ 
++#ifdef IRODS_SYSLOG
++   char *myZone = getenv("spProxyRodsZone");
++   int okToLog = 0;
++#endif
++
+    char extraInfo[100];
+ #ifdef windows_platform
+    char nt_log_msg[2048];
+ #endif
+ 
++#ifdef IRODS_SYSLOG
++   if (level <= verbosityLevel)
++   {
++      okToLog = 1;
++   }
++   
++   if (level == LOG_SQL && sqlVerbosityLevel == 1)
++   {
++      okToLog = 1;
++   }
++
++   if (!okToLog) return;
++#else
+    if (level < verbosityLevel) return;
++#endif
+ 
+-
+    va_start(ap, formatStr);
+    i = vsnprintf(bigString, BIG_STRING_LEN-1, formatStr, ap);
+    va_end(ap);
+@@ -878,15 +901,28 @@
+    if (level == LOG_SYS_WARNING) prefix="SYSTEM WARNING";
+    if (level == LOG_ERROR) prefix="ERROR";
+    if (level == LOG_NOTICE) prefix="NOTICE";
++#ifdef IRODS_SYSLOG
++   if (level == LOG_DEBUG) prefix="DEBUG";
++   if (level == LOG_DEBUG1) prefix="DEBUG1";
++   if (level == LOG_DEBUG2) prefix="DEBUG2";
++   if (level == LOG_DEBUG3) prefix="DEBUG3";
++   if (ProcessType == SERVER_PT || ProcessType == AGENT_PT ||
++     ProcessType == RE_SERVER_PT) 
++#else
+    if (level <= LOG_DEBUG) prefix="DEBUG";
+-   if (bigString[strlen(bigString)-1]=='\n') 
++   if (bigString[strlen(bigString)-1]=='\n')
++#endif
+    {
++#ifdef IRODS_SYSLOG
++		syslog(LOG_DAEMON|LOG_NOTICE,"%s - %s: %s", myZone, prefix, bigString);
++#else
+ #ifndef windows_platform
+       fprintf(errOrOut, "%s%s: %s", extraInfo, prefix, bigString);
+ #else
+ 	  sprintf(nt_log_msg, "%s%s: %s", extraInfo, prefix, bigString);
+ 	  rodsNtElog(nt_log_msg);
+ #endif
++#endif
+    }
+    else 
+    {
+Index: lib/core/src/sockComm.c
+===================================================================
+--- lib/core/src/sockComm.c	(revision 142)
++++ lib/core/src/sockComm.c	(revision 199)
+@@ -205,7 +205,11 @@
+          return (SYS_HEADER_READ_LEN_ERR - errno);
+     }
+ 
++#ifdef IRODS_SYSLOG
++    if (getRodsLogLevel () >= LOG_DEBUG3) {
++#else
+     if (getRodsLogLevel () <= LOG_DEBUG3) {
++#endif
+         printf ("received header: len = %d\n%s\n", myLen, tmpBuf);
+     }
+ 
+@@ -245,7 +249,11 @@
+         return status;
+     }
+ 
++#ifdef IRODS_SYSLOG
++    if (getRodsLogLevel () >= LOG_DEBUG3) {
++#else
+     if (getRodsLogLevel () <= LOG_DEBUG3) {
++#endif
+         printf ("sending header: len = %d\n%s\n", headerBBuf->len, 
+ 	  (char *) headerBBuf->buf);
+     }
+@@ -1061,7 +1069,11 @@
+     /* send the rest */
+ 
+     if (msgHeader.msgLen > 0) {
++#ifdef IRODS_SYSLOG
++        if (irodsProt == XML_PROT && getRodsLogLevel () >= LOG_DEBUG3) {
++#else
+         if (irodsProt == XML_PROT && getRodsLogLevel () <= LOG_DEBUG3) {
++#endif
+             printf ("sending msg: \n%s\n", (char *) msgBBuf->buf);
+         }
+         status = myWrite (sock, msgBBuf->buf, msgBBuf->len, SOCK_TYPE, NULL);
+@@ -1070,7 +1082,11 @@
+     }
+ 
+     if (msgHeader.errorLen > 0) {
++#ifdef IRODS_SYSLOG
++        if (irodsProt == XML_PROT && getRodsLogLevel () >= LOG_DEBUG3) {
++#else
+         if (irodsProt == XML_PROT && getRodsLogLevel () <= LOG_DEBUG3) {
++#endif
+             printf ("sending error msg: \n%s\n", (char *) errorBBuf->buf);
+         }
+         status = myWrite (sock, errorBBuf->buf, errorBBuf->len, SOCK_TYPE, 
+@@ -1129,7 +1145,11 @@
+         nbytes = myRead (sock, inputStructBBuf->buf, myHeader->msgLen, 
+ 	  SOCK_TYPE, NULL);
+ 
++#ifdef IRODS_SYSLOG
++        if (irodsProt == XML_PROT && getRodsLogLevel () >= LOG_DEBUG3) {
++#else
+         if (irodsProt == XML_PROT && getRodsLogLevel () <= LOG_DEBUG3) {
++#endif
+             printf ("received msg: \n%s\n", (char *) inputStructBBuf->buf);
+         }
+ 
+@@ -1153,7 +1173,11 @@
+         nbytes = myRead (sock, errorBBuf->buf, myHeader->errorLen,
+ 	  SOCK_TYPE, NULL);
+ 
++#ifdef IRODS_SYSLOG
++        if (irodsProt == XML_PROT && getRodsLogLevel () >= LOG_DEBUG3) {
++#else
+         if (irodsProt == XML_PROT && getRodsLogLevel () <= LOG_DEBUG3) {
++#endif
+             printf ("received error msg: \n%s\n", (char *) errorBBuf->buf);
+         }
+ 
+Index: lib/core/src/packStruct.c
+===================================================================
+--- lib/core/src/packStruct.c	(revision 142)
++++ lib/core/src/packStruct.c	(revision 199)
+@@ -45,7 +45,11 @@
+ 	/* add a NULL termination */
+ 	extendPackedOutput (&packedOutput, 1, (void **) &outPtr);
+ 	*outPtr = '\0';
++#ifdef IRODS_SYSLOG
++        if (getRodsLogLevel () >= LOG_DEBUG2) {
++#else
+         if (getRodsLogLevel () <= LOG_DEBUG2) {
++#endif
+ 	    printf ("packed XML: \n%s\n", (char *) packedOutput.bBuf->buf);
+ 	}
+     }
+Index: lib/Makefile
+===================================================================
+--- lib/Makefile	(revision 142)
++++ lib/Makefile	(revision 199)
+@@ -130,8 +130,10 @@
+ ifdef KRB_AUTH
+ CFLAGS_OPTIONS += -D KRB_AUTH
+ endif
++ifdef IRODS_SYSLOG
++CFLAGS_OPTIONS += -D IRODS_SYSLOG
++endif
+ 
+-
+ #
+ # Princpal Targets
+ #
+Index: server/icat/src/icatGeneralQuery.c
+===================================================================
+--- server/icat/src/icatGeneralQuery.c	(revision 142)
++++ server/icat/src/icatGeneralQuery.c	(revision 199)
+@@ -1059,7 +1059,11 @@
+       table = setTable(genQueryInp.selectInp.inx[i], 1, 
+ 		       genQueryInp.selectInp.value[i]&0xf);
+       if (table < 0) {
+-	 printf("Table for column %d not found\n",
++#ifdef IRODS_SYSLOG
++	 rodsLog(LOG_ERROR,"Table for column %d not found\n",
++#else
++    printf("Table for column %d not found\n",
++#endif
+ 		genQueryInp.selectInp.inx[i]);
+ 	 return(CAT_UNKNOWN_TABLE);
+       }
+@@ -1081,7 +1085,11 @@
+       }
+       table = setTable(genQueryInp.sqlCondInp.inx[i], 0, 0);
+       if (table < 0) {
+-	 printf("Table for column %d not found\n",
++#ifdef IRODS_SYSLOG
++	 rodsLog(LOG_ERROR,"Table for column %d not found\n",
++#else
++    printf("Table for column %d not found\n",
++#endif
+ 		genQueryInp.sqlCondInp.inx[i]);
+ 	 return(CAT_UNKNOWN_TABLE);
+       }
+@@ -1107,7 +1115,11 @@
+ 
+    keepVal = tScan(table, -1);
+    if (keepVal!=1 || nToFind!=0) {
++#ifdef IRODS_SYSLOG
++      rodsLog(LOG_ERROR,"error failed to link tables\n");
++#else
+       printf("error failed to link tables\n");
++#endif
+       return(CAT_FAILED_TO_LINK_TABLES);
+    }
+    else {
+Index: server/core/src/rodsServer.c
+===================================================================
+--- server/core/src/rodsServer.c	(revision 142)
++++ server/core/src/rodsServer.c	(revision 199)
+@@ -3,6 +3,8 @@
+ 
+ #include "rodsServer.h"
+ 
++#include <syslog.h>
++
+ #ifndef windows_platform
+ #include <sys/socket.h>
+ #include <netinet/in.h>
+@@ -31,6 +33,11 @@
+     ProcessType = SERVER_PT;	/* I am a server */
+ 
+     rodsLogLevel (LOG_NOTICE);
++
++#ifdef IRODS_SYSLOG
++/* Open a connection to syslog */
++	openlog("rodsServer",LOG_ODELAY|LOG_PID,LOG_DAEMON);
++#endif
+     
+     ServerBootTime = time (0);
+     while ((c = getopt(argc, argv,"uvVqsh")) != EOF) {
+@@ -126,7 +133,11 @@
+     getLogfileName (&logFile, logDir, RODS_LOGFILE);
+ 
+ #ifndef windows_platform
++#ifdef IRODS_SYSLOG
++	LogFd = 0;
++#else
+     LogFd = open (logFile, O_CREAT|O_WRONLY|O_APPEND, 0644);
++#endif
+ #else
+ 	
+ 	LogFd = iRODSNt_open(logFile, O_CREAT|O_APPEND|O_WRONLY, 1);
+@@ -147,17 +158,23 @@
+ 	     "serverize: setsid failed, errno = %d\n", errno);
+             exit(1);
+ 	}
++#ifndef IRODS_SYSLOG
+         (void) dup2 (LogFd, 0);
+         (void) dup2 (LogFd, 1);
+         (void) dup2 (LogFd, 2);
+         close (LogFd);
+         LogFd = 2;
++#endif
+     }
+ #else
+ 	_close(LogFd);
+ #endif
+ 
++#ifdef IRODS_SYSLOG
++    return (0);
++#else
+     return (LogFd);
++#endif
+ }
+ 
+ int 
+Index: server/core/src/irodsReServer.c
+===================================================================
+--- server/core/src/irodsReServer.c	(revision 142)
++++ server/core/src/irodsReServer.c	(revision 199)
+@@ -11,6 +11,7 @@
+ #include "objMetaOpr.h"
+ #include "rsApiHandler.h"
+ #include "rsIcatOpr.h"
++#include <syslog.h>
+ 
+ extern int msiAdmClearAppRuleStruct(ruleExecInfo_t *rei);
+ 
+@@ -42,7 +43,12 @@
+     /* Handle option to log sql commands */
+     tmpStr = getenv (SP_LOG_SQL);
+     if (tmpStr != NULL) {
++#ifdef IRODS_SYSLOG
++       int j = atoi(tmpStr);
++       rodsLogSqlReq(j);
++#else
+        rodsLogSqlReq(1);
++#endif
+     }
+ 
+     /* Set the logging level */
+@@ -55,6 +61,11 @@
+          rodsLogLevel(LOG_NOTICE); /* default */
+     }
+ 
++#ifdef IRODS_SYSLOG
++/* Open a connection to syslog */
++    openlog("rodsReServer",LOG_ODELAY|LOG_PID,LOG_DAEMON);
++#endif
++
+     while ((c=getopt(argc, argv,"sSvD:")) != EOF) {
+         switch (c) {
+ 	    case 's':
+Index: server/core/src/rodsAgent.c
+===================================================================
+--- server/core/src/rodsAgent.c	(revision 142)
++++ server/core/src/rodsAgent.c	(revision 199)
+@@ -4,6 +4,7 @@
+ /* rodsAgent.c - The main code for rodsAgent
+  */
+ 
++#include <syslog.h>
+ #include "rodsAgent.h"
+ #include "rsApiHandler.h"
+ #include "icatHighLevelRoutines.h"
+@@ -55,7 +56,12 @@
+     /* Handle option to log sql commands */
+     tmpStr = getenv (SP_LOG_SQL);
+     if (tmpStr != NULL) {
++#ifdef IRODS_SYSLOG
++       int j = atoi(tmpStr);
++       rodsLogSqlReq(j);
++#else
+        rodsLogSqlReq(1);
++#endif
+     }
+ 
+     /* Set the logging level */
+@@ -68,6 +74,11 @@
+        rodsLogLevel(LOG_NOTICE); /* default */
+     }
+ 
++#ifdef IRODS_SYSLOG
++/* Open a connection to syslog */
++	openlog("rodsAgent",LOG_ODELAY|LOG_PID,LOG_DAEMON);
++#endif
++
+     status = getRodsEnv (&rsComm.myEnv);
+ 
+     if (status < 0) {
+Index: server/core/src/initServer.c
+===================================================================
+--- server/core/src/initServer.c	(revision 142)
++++ server/core/src/initServer.c	(revision 199)
+@@ -259,13 +279,21 @@
+ 
+     if (myServerHost->localFlag == LOCAL_HOST) {
+ #ifndef windows_platform
++#ifdef IRODS_SYSLOG
++		rodsLog (LOG_NOTICE,"    LocalHostName: ");
++#else /* IRODS_SYSLOG */
+         fprintf (stderr, "    LocalHostName: ");
++#endif /* IRODS_SYSLOG */
+ #else
+ 		rodsLog (LOG_NOTICE,"    LocalHostName: ");
+ #endif
+     } else {
+ #ifndef windows_platform
++#ifdef IRODS_SYSLOG
++		rodsLog (LOG_NOTICE,"    RemoteHostName: ");
++#else /* IRODS_SYSLOG */
+         fprintf (stderr, "    RemoteHostName: ");
++#endif /* IRODS_SYSLOG */
+ #else
+ 		rodsLog (LOG_NOTICE,"    RemoteHostName: ");
+ #endif
+@@ -275,7 +303,11 @@
+ 
+     while (tmpHostName != NULL) {
+ #ifndef windows_platform
++#ifdef IRODS_SYSLOG
++		rodsLog (LOG_NOTICE," %s,", tmpHostName->name);
++#else /* IRODS_SYSLOG */
+         fprintf (stderr, " %s,", tmpHostName->name);
++#endif /* IRODS_SYSLOG */
+ #else
+ 		rodsLog (LOG_NOTICE," %s,", tmpHostName->name);
+ #endif
+@@ -283,8 +315,12 @@
+     }
+ 
+ #ifndef windows_platform
++#ifdef IRODS_SYSLOG
++	rodsLog (LOG_NOTICE," Port Num: %d.\n\n", ((zoneInfo_t *)myServerHost->zoneInfo)->portNum);
++#else /* IRODS_SYSLOG */
+     fprintf (stderr, " Port Num: %d.\n\n", 
+       ((zoneInfo_t *)myServerHost->zoneInfo)->portNum);
++#endif /* IRODS_SYSLOG */
+ #else
+ 	rodsLog (LOG_NOTICE," Port Num: %d.\n\n", ((zoneInfo_t *)myServerHost->zoneInfo)->portNum);
+ #endif
+@@ -300,7 +336,11 @@
+ 
+     tmpZoneInfo = ZoneInfoHead;
+ #ifndef windows_platform
++#ifdef IRODS_SYSLOG
++	rodsLog (LOG_NOTICE,"Zone Info:\n");
++#else /* IRODS_SYSLOG */
+     fprintf (stderr, "Zone Info:\n");
++#endif /* IRODS_SYSLOG */
+ #else
+ 	rodsLog (LOG_NOTICE,"Zone Info:\n");
+ #endif
+@@ -308,27 +348,44 @@
+ 	/* print the master */
+         tmpRodsServerHost = (rodsServerHost_t *) tmpZoneInfo->masterServerHost;
+ #ifndef windows_platform
+-	fprintf (stderr, "    ZoneName: %s   ", tmpZoneInfo->zoneName);
++#ifdef IRODS_SYSLOG
++		rodsLog (LOG_NOTICE,"    ZoneName: %s   ", tmpZoneInfo->zoneName);
++#else /* IRODS_SYSLOG */
++		fprintf (stderr, "    ZoneName: %s   ", tmpZoneInfo->zoneName);
++#endif /* IRODS_SYSLOG */
+ #else
+ 		rodsLog (LOG_NOTICE,"    ZoneName: %s   ", tmpZoneInfo->zoneName);
+ #endif
+ 	if (tmpRodsServerHost->rcatEnabled == LOCAL_ICAT) {
+ #ifndef windows_platform
++#ifdef IRODS_SYSLOG
++		rodsLog (LOG_NOTICE,"Type: LOCAL_ICAT   "); 
++#else /* IRODS_SYSLOG */
+ 	    fprintf (stderr, "Type: LOCAL_ICAT   "); 
++#endif /* IRODS_SYSLOG */
+ #else
+ 		rodsLog (LOG_NOTICE,"Type: LOCAL_ICAT   "); 
+ #endif
+ 	} else {
+ #ifndef windows_platform
++#ifdef IRODS_SYSLOG
++		rodsLog (LOG_NOTICE,"Type: REMOTE_ICAT   ");
++#else /* IRODS_SYSLOG */
+ 	    fprintf (stderr, "Type: REMOTE_ICAT   "); 
++#endif /* IRODS_SYSLOG */
+ #else
+ 		rodsLog (LOG_NOTICE,"Type: REMOTE_ICAT   ");
+ #endif
+ 	}
+ 
+ #ifndef windows_platform
++#ifdef IRODS_SYSLOG
++	rodsLog (LOG_NOTICE, " HostAddr: %s   PortNum: %d\n\n", 
++	  tmpRodsServerHost->hostName->name, tmpZoneInfo->portNum);
++#else /* IRODS_SYSLOG */
+         fprintf (stderr, " HostAddr: %s   PortNum: %d\n\n", 
+ 	  tmpRodsServerHost->hostName->name, tmpZoneInfo->portNum);
++#endif /* IRODS_SYSLOG */
+ #else
+ 	rodsLog (LOG_NOTICE, " HostAddr: %s   PortNum: %d\n\n", 
+ 	  tmpRodsServerHost->hostName->name, tmpZoneInfo->portNum);
+@@ -338,10 +395,17 @@
+         tmpRodsServerHost = (rodsServerHost_t *) tmpZoneInfo->slaveServerHost;
+ 	if (tmpRodsServerHost != NULL) { 
+ #ifndef windows_platform
++#ifdef IRODS_SYSLOG
++		rodsLog (LOG_NOTICE, "    ZoneName: %s   ", tmpZoneInfo->zoneName);
++		rodsLog (LOG_NOTICE, "Type: LOCAL_SLAVE_ICAT   ");
++		rodsLog (LOG_NOTICE, " HostAddr: %s   PortNum: %d\n\n",
++              tmpRodsServerHost->hostName->name, tmpZoneInfo->portNum);
++#else /* IRODS_SYSLOG */
+             fprintf (stderr, "    ZoneName: %s   ", tmpZoneInfo->zoneName);
+             fprintf (stderr, "Type: LOCAL_SLAVE_ICAT   ");
+             fprintf (stderr, " HostAddr: %s   PortNum: %d\n\n",
+               tmpRodsServerHost->hostName->name, tmpZoneInfo->portNum);
++#endif /* IRODS_SYSLOG */
+ #else
+ 		rodsLog (LOG_NOTICE, "    ZoneName: %s   ", tmpZoneInfo->zoneName);
+ 		rodsLog (LOG_NOTICE, "Type: LOCAL_SLAVE_ICAT   ");
+@@ -364,7 +428,11 @@
+     int localRescCnt = 0;
+ 
+ #ifndef windows_platform
++#ifdef IRODS_SYSLOG
++	rodsLog (LOG_NOTICE,"Local Resource configuration: \n");
++#else /* IRODS_SYSLOG */
+     fprintf (stderr, "Local Resource configuration: \n");
++#endif /* IRODS_SYSLOG */
+ #else
+ 	rodsLog (LOG_NOTICE,"Local Resource configuration: \n");
+ #endif
+@@ -378,8 +446,13 @@
+ 	tmpRodsServerHost = myRescInfo->rodsServerHost;
+         if (tmpRodsServerHost->localFlag == LOCAL_HOST) {
+ #ifndef windows_platform
++#ifdef IRODS_SYSLOG
++			rodsLog (LOG_NOTICE,"   RescName: %s, VaultPath: %s\n",
++	      myRescInfo->rescName, myRescInfo->rescVaultPath); 
++#else /* IRODS_SYSLOG */
+ 	    fprintf (stderr, "   RescName: %s, VaultPath: %s\n",
+ 	      myRescInfo->rescName, myRescInfo->rescVaultPath); 
++#endif /* IRODS_SYSLOG */
+ #else
+ 			rodsLog (LOG_NOTICE,"   RescName: %s, VaultPath: %s\n",
+ 	      myRescInfo->rescName, myRescInfo->rescVaultPath); 
+@@ -390,14 +463,22 @@
+     }
+ 
+ #ifndef windows_platform
++#ifdef IRODS_SYSLOG
++	rodsLog (LOG_NOTICE,"\n");
++#else /* IRODS_SYSLOG */
+     fprintf (stderr, "\n");
++#endif /* IRODS_SYSLOG */
+ #else
+ 	rodsLog (LOG_NOTICE,"\n");
+ #endif
+ 
+     if (localRescCnt == 0) {
+ #ifndef windows_platform
++#ifdef IRODS_SYSLOG
++		rodsLog (LOG_NOTICE,"   No Local Resource Configured\n");
++#else /* IRODS_SYSLOG */
+         fprintf (stderr, "   No Local Resource Configured\n");
++#endif /* IRODS_SYSLOG */
+ #else
+ 		rodsLog (LOG_NOTICE,"   No Local Resource Configured\n");
+ #endif
+@@ -1905,7 +1986,11 @@
+ logFileOpen (int runMode, char *logDir, char *logFileName)
+ {
+     char *logFile = NULL;
+-    int logFd;
++#ifdef IRODS_SYSLOG
++    int logFd = 0;
++#else
++	int logFd;
++#endif
+ 
+     if (runMode == SINGLE_PASS && logDir == NULL) {
+         return (1);
+@@ -1918,7 +2003,9 @@
+ 
+     getLogfileName (&logFile, logDir, logFileName);
+ 
++#ifndef IRODS_SYSLOG
+     logFd = open (logFile, O_CREAT|O_WRONLY|O_APPEND, 0666);
++#endif
+     if (logFd < 0) {
+         fprintf (stderr, "logFileOpen: Unable to open %s. errno = %d\n",
+           logFile, errno);
+Index: server/Makefile
+===================================================================
+--- server/Makefile	(revision 142)
++++ server/Makefile	(revision 199)
+@@ -137,6 +137,9 @@
+ ifdef KRB_AUTH
+ CFLAGS +=       -DKRB_AUTH
+ endif
++ifdef IRODS_SYSLOG
++CFLAGS +=		-DIRODS_SYSLOG
++endif
+ 
+ # re
+ ifdef RULE_ENGINE

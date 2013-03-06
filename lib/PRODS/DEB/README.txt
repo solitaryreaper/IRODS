@@ -1,0 +1,1 @@
+This is a very rough first try at a Debian package for iRODS. By default it compiled an ICAT-enabled server using Postgres and it compiles the client tools. To change compile options edit the debian/rules file with an updated set of configure options.

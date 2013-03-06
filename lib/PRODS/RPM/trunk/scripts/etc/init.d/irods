@@ -1,0 +1,44 @@
+#!/bin/sh
+
+# Start script for iRODS
+# Simply executes /opt/irods/bin/irodsctl <project> $OPERATION for each project config file in /etc/irods/*
+# chkconfig: 2345 90 10
+# description: Starts up and shuts down RPM-installed iRODS servers
+OPERATION=$1
+
+case $OPERATION in
+start)
+	RC=0
+	for FILE in `ls /etc/irods`
+	do
+		echo -n "Starting iRODS server $FILE..."
+		/opt/irods/server/bin/irodsctl $FILE start &> /dev/null
+		sleep 1
+		if [ -r /var/run/irods/$FILE.pid ]
+		then
+	 	   echo "OK"
+	        else
+		   echo "FAILED"
+		   RC=1
+	        fi
+	done
+	exit $RC
+	;;
+
+stop)
+	for FILE in `ls /etc/irods`
+	do
+		/opt/irods/server/bin/irodsctl $FILE stop
+	done
+	;;
+
+status)
+	for FILE in `ls /etc/irods`
+	do
+		/opt/irods/server/bin/irodsctl $FILE status
+	done
+	;;
+
+*)
+	echo "Usage: $0 {start|stop|status}"
+esac

@@ -1,0 +1,10 @@
+Index: config/config.mk.in
+===================================================================
+--- config/config.mk.in	(revision 199)
++++ config/config.mk.in	(working copy)
+@@ -247,4 +247,4 @@
+ endif
+ 
+ # Syslog logging
+-#IRODS_SYSLOG = 1
++IRODS_SYSLOG = 1

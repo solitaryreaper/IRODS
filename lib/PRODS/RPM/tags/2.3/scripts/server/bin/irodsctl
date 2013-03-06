@@ -1,0 +1,153 @@
+#!/bin/sh
+
+# Script to control IRODS server instances
+IRODS_HOME="/opt/irods/server"
+function usage()
+{
+	echo "Usage: irodsctl <PROJECT> [start/stop/status]"
+	exit 0
+}
+
+function read_config()
+{
+	if [ ! -r /etc/irods/$1 ]
+	then
+		echo "Please create the file /etc/irods/$1 with suitable contents "
+		exit 1
+	fi
+	source /etc/irods/$1
+}
+
+function setup_env()
+{
+	PROJECT_DIR=/var/opt/irods/$1
+
+	[ ! -d $PROJECT_DIR ] && mkdir $PROJECT_DIR
+
+	# Create server.config file
+	echo -e "\
+icatHost $icatHost\n\
+DBUsername $DB_USERNAME\n\
+DBPassword $DB_PASSWORD\n\
+reRuleSet $reRuleSet\n\
+reFuncMapSet $reFuncMapSet\n\
+reVariableMapSet $reVariableMapSet\n\
+KerberosName $KerberosName
+" > $PROJECT_DIR/server.config
+
+	# Create IRODS env file
+	echo -e "\
+irodsUserName '$IRODS_USER'\n\
+irodsPort $irodsPort\n\
+irodsZone '$IRODS_ZONE'\n\
+irodsHost $IRODS_HOST\n\
+" > $PROJECT_DIR/env
+
+	# Create IRODS auth file
+	export irodsEnvFile=$PROJECT_DIR/env
+	export irodsAuthFileName=$PROJECT_DIR/auth
+	su -m $RUN_AS_USER -c "iinit $IRODS_PW &> /dev/null"
+
+	# Add requisite sub-directories
+	cp -ru $IRODS_HOME/config/packedRei $PROJECT_DIR
+	cp -ru $IRODS_HOME/config/reConfigs $PROJECT_DIR
+
+	# Setup iRODS log directory
+	[ ! -d $PROJECT_DIR/log ] && mkdir $PROJECT_DIR/log
+	export irodsLogDir=$PROJECT_DIR/log
+	
+	# Create irodsHost file
+	echo -e "\
+$IRODS_HOSTCONFIG\n\
+" > $PROJECT_DIR/irodsHost
+
+	chown -R $RUN_AS_USER $PROJECT_DIR
+	chmod -R 700 $PROJECT_DIR
+}
+
+function start_irods()
+{
+	read_config $PROJECT
+	setup_env $PROJECT
+	irodsConfigDir=$PROJECT_DIR
+	
+	irodsEnvFile="$irodsConfigDir/env"
+	# Export relevant env variables for the server to pick up
+	export irodsConfigDir irodsEnvFile irodsPort spLogLevel spLogSql svrPortRangeStart svrPortRangeEnd reServerOnIes svrPortReconnect RETESTFLAG
+	export ODBC_DSN
+	export ADS_USER
+	export KRB5_KTNAME
+	export KerberosName
+
+	# Start the server, making sure the project is marked
+	cd $IRODS_HOME/bin
+	su -m $RUN_AS_USER -c "./irodsServer PROJECT=$PROJECT 2>&1 "
+
+	# Record the process ID for control purposes
+	PID=`ps -eo pid,args | grep rods | grep "PROJECT=$PROJECT$" | sed "s/^ *//" | cut -d' ' -f1`
+	echo $PID > /var/run/irods/$PROJECT.pid
+}
+
+function stop_irods()
+{
+	if [ ! -r /var/run/irods/$PROJECT.pid ]
+	then
+		echo "IRODS project $PROJECT not running"
+		exit 1
+	fi
+
+	PID=`cat /var/run/irods/$PROJECT.pid`
+
+	# Get a list of children and kill them
+	for CHILD in `ps --no-headers --ppid $PID -o pid`
+	do
+		kill $CHILD
+	done
+
+	# Now kill the parent process
+	kill $PID
+}
+
+function status_irods()
+{
+	if [ ! -r /var/run/irods/$PROJECT.pid ]
+	then
+		echo "IRODS project $PROJECT not running"
+		exit 1
+	fi
+	
+	PID=`cat /var/run/irods/$PROJECT.pid`
+	echo "IRODS server for project $PROJECT running with PID $PID"
+
+	echo "Child processes:"
+	 # Get a list of children
+        for CHILD in `ps --no-headers --ppid $PID -o pid`
+        do
+		echo $CHILD
+        done
+}
+
+if [ "$*" == "" ]; then 
+	usage
+fi
+
+PROJECT=$1
+ACTION=$2
+
+case $ACTION in
+
+start)
+	start_irods
+	exit 0
+;;
+stop)
+	stop_irods
+	exit 0
+;;
+status)
+	status_irods
+	exit 0
+;;
+esac
+
+

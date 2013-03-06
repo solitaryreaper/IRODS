@@ -1,0 +1,39 @@
+Author: mwan
+Date: Mon Mar 28 10:15:55 2011
+New Revision: 3871
+
+Log:
+Fix a problem where the child of the irodsServer could get into an infinite 
+loop and use up large amount of CPU time because the request queue may be
+inconsistent because the parent is multi-threaded.
+
+Modified:
+   trunk/iRODS/server/core/src/rodsServer.c
+
+Modified: trunk/iRODS/server/core/src/rodsServer.c
+==============================================================================
+--- trunk/iRODS/server/core/src/rodsServer.c    Thu Mar 24 06:51:54 2011
+(r3870)
++++ trunk/iRODS/server/core/src/rodsServer.c    Mon Mar 28 10:15:55 2011
+(r3871)
+@@ -413,14 +413,20 @@
+ #endif
+        /* close any socket still in the queue */
+ #ifndef SINGLE_SVR_THR
++       /* These queues may be inconsistent because of the multi-threading 
++         * of the parent. set sock to -1 if it has been closed */
+        tmpAgentProc = ConnReqHead;
+        while (tmpAgentProc != NULL) {
++           if (tmpAgentProc->sock == -1) break;
+            close (tmpAgentProc->sock);
++           tmpAgentProc->sock = -1;
+            tmpAgentProc = tmpAgentProc->next;
+        }
+         tmpAgentProc = SpawnReqHead;
+         while (tmpAgentProc != NULL) {
++           if (tmpAgentProc->sock == -1) break;
+             close (tmpAgentProc->sock);
++           tmpAgentProc->sock = -1;
+             tmpAgentProc = tmpAgentProc->next;
+         }
+ #endif

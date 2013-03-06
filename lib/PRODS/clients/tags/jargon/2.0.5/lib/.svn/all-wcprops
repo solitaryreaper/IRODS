@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/lib
+END
+MANIFEST.MF
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/lib/MANIFEST.MF
+END
+gsi-classes.jar
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/lib/gsi-classes.jar
+END
+.cvsignore
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/lib/.cvsignore
+END

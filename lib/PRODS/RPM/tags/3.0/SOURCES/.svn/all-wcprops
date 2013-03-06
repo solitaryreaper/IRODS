@@ -1,0 +1,89 @@
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/270/trunk/RPM/tags/3.0/SOURCES
+END
+RPMirodsctl.patch
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/270/trunk/RPM/tags/3.0/SOURCES/RPMirodsctl.patch
+END
+serverMakefile.patch
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/270/trunk/RPM/tags/3.0/SOURCES/serverMakefile.patch
+END
+iRODS-postgres.patch
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/270/trunk/RPM/tags/3.0/SOURCES/iRODS-postgres.patch
+END
+enable-syslog.patch
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/270/trunk/RPM/tags/3.0/SOURCES/enable-syslog.patch
+END
+irods_2.5_patch_1
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/270/trunk/RPM/tags/3.0/SOURCES/irods_2.5_patch_1
+END
+irods_2.5_patch_2
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/270/trunk/RPM/tags/3.0/SOURCES/irods_2.5_patch_2
+END
+irods3.0-pthread.patch
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/270/trunk/RPM/tags/3.0/SOURCES/irods3.0-pthread.patch
+END
+RPM-scripts.tar.gz
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/270/trunk/RPM/tags/3.0/SOURCES/RPM-scripts.tar.gz
+END
+kerberos.patch
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/270/trunk/RPM/tags/3.0/SOURCES/kerberos.patch
+END
+clientMakefile.patch
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/270/trunk/RPM/tags/3.0/SOURCES/clientMakefile.patch
+END
+iRODS-RPM.patch
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/270/trunk/RPM/tags/3.0/SOURCES/iRODS-RPM.patch
+END
+ads-driver.patch
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/270/trunk/RPM/tags/3.0/SOURCES/ads-driver.patch
+END
+tar-bundles.patch
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/270/trunk/RPM/tags/3.0/SOURCES/tar-bundles.patch
+END
+syslog.patch
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/270/trunk/RPM/tags/3.0/SOURCES/syslog.patch
+END

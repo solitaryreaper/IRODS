@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 37
+/svn/!svn/ver/260/trunk/CrossZoneRepl
+END
+utils.h
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/!svn/ver/253/trunk/CrossZoneRepl/utils.h
+END
+crosszonerepl.cfg
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/253/trunk/CrossZoneRepl/crosszonerepl.cfg
+END
+CrossZoneRepl.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/256/trunk/CrossZoneRepl/CrossZoneRepl.cpp
+END
+readme.txt
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/260/trunk/CrossZoneRepl/readme.txt
+END
+AvuMetaData.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/258/trunk/CrossZoneRepl/AvuMetaData.cpp
+END
+utils.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/253/trunk/CrossZoneRepl/utils.cpp
+END
+configure
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/257/trunk/CrossZoneRepl/configure
+END
+Makefile.in
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/255/trunk/CrossZoneRepl/Makefile.in
+END
+AvuMetaData.h
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/253/trunk/CrossZoneRepl/AvuMetaData.h
+END

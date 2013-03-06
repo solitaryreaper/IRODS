@@ -1,0 +1,28 @@
+Index: config/config.mk.in
+===================================================================
+--- config/config.mk.in	(.../tags/2.0.1-DICE-2009-03-26)	(revision 184)
++++ config/config.mk.in	(.../branches/tar-bundles)	(revision 184)
+@@ -210,9 +210,9 @@
+ 
+ # TAR_STRUCT_FILE - specify whether the tar structured file will be loaded 
+ # into irodsAgent.
+-# TAR_STRUCT_FILE = 1
++TAR_STRUCT_FILE = 1
+ ifdef TAR_STRUCT_FILE
+-tarDir=/data/mwan/tar/libtar-1.2.11
++tarDir=/usr
+ endif
+ 
+ #
+Index: server/drivers/src/tarStructFileDriver.c
+===================================================================
+--- server/drivers/src/tarStructFileDriver.c	(.../tags/2.0.1-DICE-2009-03-26)	(revision 184)
++++ server/drivers/src/tarStructFileDriver.c	(.../branches/tar-bundles)	(revision 184)
+@@ -9,7 +9,6 @@
+ # include <zlib.h>
+ #endif
+ 
+-#include <compat.h>
+ 
+ #include "tarSubStructFileDriver.h"
+ #include "rsGlobalExtern.h"

@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/local
+END
+LocalMetaDataRecordList.java
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/local/LocalMetaDataRecordList.java
+END
+LocalFileInputStream.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/local/LocalFileInputStream.java
+END
+LocalAccount.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/local/LocalAccount.java
+END
+LocalFileOutputStream.java
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/local/LocalFileOutputStream.java
+END
+LocalFile.java
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/local/LocalFile.java
+END
+LocalRandomAccessFile.java
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/local/LocalRandomAccessFile.java
+END
+LocalFileSystem.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/local/LocalFileSystem.java
+END

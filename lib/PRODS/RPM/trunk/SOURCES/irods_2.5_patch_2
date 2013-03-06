@@ -1,0 +1,25 @@
+Author: mwan
+Date: Tue Mar 22 17:35:14 2011
+New Revision: 3866
+
+Log:
+Fix a problem in irsync where iRODS to iRODS (i:x i:y) sync does not work.
+
+Modified:
+   trunk/iRODS/clients/icommands/src/irsync.c
+
+Modified: trunk/iRODS/clients/icommands/src/irsync.c
+==============================================================================
+--- trunk/iRODS/clients/icommands/src/irsync.c  Mon Mar 21 16:46:40 2011
+(r3865)
++++ trunk/iRODS/clients/icommands/src/irsync.c  Tue Mar 22 17:35:14 2011
+(r3866)
+@@ -58,7 +58,7 @@
+         } else if (strncmp (argv[argc-i], "i:", 2) == 0) {
+             srcType = UNKNOWN_OBJ_T;
+            strcpy (buffer, argv[argc-i] + 2);
+-           argv[argc-i] = buffer;
++           argv[argc-i] = strdup (buffer);
+         } else {
+             srcType = UNKNOWN_FILE_T;
+         }

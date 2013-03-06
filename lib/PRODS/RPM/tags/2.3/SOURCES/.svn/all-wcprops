@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/244/trunk/RPM/tags/2.3/SOURCES
+END
+serverMakefile.patch
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/244/trunk/RPM/tags/2.3/SOURCES/serverMakefile.patch
+END
+iRODS-postgres.patch
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/244/trunk/RPM/tags/2.3/SOURCES/iRODS-postgres.patch
+END
+enable-syslog.patch
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/244/trunk/RPM/tags/2.3/SOURCES/enable-syslog.patch
+END
+RPM-scripts.tar.gz
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/244/trunk/RPM/tags/2.3/SOURCES/RPM-scripts.tar.gz
+END
+kerberos.patch
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/244/trunk/RPM/tags/2.3/SOURCES/kerberos.patch
+END
+clientMakefile.patch
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/244/trunk/RPM/tags/2.3/SOURCES/clientMakefile.patch
+END
+iRODS-RPM.patch
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/244/trunk/RPM/tags/2.3/SOURCES/iRODS-RPM.patch
+END
+ads-driver.patch
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/244/trunk/RPM/tags/2.3/SOURCES/ads-driver.patch
+END
+tar-bundles.patch
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/244/trunk/RPM/tags/2.3/SOURCES/tar-bundles.patch
+END
+syslog.patch
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/244/trunk/RPM/tags/2.3/SOURCES/syslog.patch
+END

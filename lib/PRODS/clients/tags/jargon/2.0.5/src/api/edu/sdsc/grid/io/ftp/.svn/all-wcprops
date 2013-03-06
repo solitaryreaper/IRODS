@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/ftp
+END
+FTPFileSystem.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/ftp/FTPFileSystem.java
+END
+FTPAccount.java
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/ftp/FTPAccount.java
+END
+FTPFile.java
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/ftp/FTPFile.java
+END

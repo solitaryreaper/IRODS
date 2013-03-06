@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/http
+END
+HTTPFileSystem.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/http/HTTPFileSystem.java
+END
+HTTPFileInputStream.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/http/HTTPFileInputStream.java
+END
+HTTPAccount.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/http/HTTPAccount.java
+END
+HTTPFileOutputStream.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/http/HTTPFileOutputStream.java
+END
+HTTPFile.java
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/http/HTTPFile.java
+END
+HTTPRandomAccessFile.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/211/trunk/clients/tags/jargon/2.0.5/src/api/edu/sdsc/grid/io/http/HTTPRandomAccessFile.java
+END

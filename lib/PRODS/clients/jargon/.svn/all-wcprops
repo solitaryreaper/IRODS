@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 38
+/svn/!svn/ver/262/trunk/clients/jargon
+END
+LICENSE.txt
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/3/trunk/clients/jargon/LICENSE.txt
+END
+icommands_to_Jargon.txt
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/129/trunk/clients/jargon/icommands_to_Jargon.txt
+END
+README.txt
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/193/trunk/clients/jargon/README.txt
+END
+README_JARGON.TXT
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/262/trunk/clients/jargon/README_JARGON.TXT
+END
+README_GSI.txt
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/3/trunk/clients/jargon/README_GSI.txt
+END
+build.xml
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/194/trunk/clients/jargon/build.xml
+END

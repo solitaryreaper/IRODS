@@ -1,0 +1,125 @@
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/230/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods
+END
+IRODSRandomAccessFile.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/200/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/IRODSRandomAccessFile.java
+END
+GSIAuth.java
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/147/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/GSIAuth.java
+END
+Domain.java
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/120/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/Domain.java
+END
+Rule.java
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/200/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/Rule.java
+END
+Tag.java
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/202/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/Tag.java
+END
+IRODSMetaDataRecordList.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/151/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/IRODSMetaDataRecordList.java
+END
+IRODSFileInputStream.java
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/180/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/IRODSFileInputStream.java
+END
+IRODSFileOutputStream.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/176/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/IRODSFileOutputStream.java
+END
+User.java
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/120/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/User.java
+END
+Parameter.java
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/120/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/Parameter.java
+END
+Method.java
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/120/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/Method.java
+END
+IRODSFile.java
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/230/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/IRODSFile.java
+END
+IRODSFileSystem.java
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/206/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/IRODSFileSystem.java
+END
+Resource.java
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/120/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/Resource.java
+END
+IRODSAdmin.java
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/147/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/IRODSAdmin.java
+END
+IRODSMetaDataSet.java
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/218/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/IRODSMetaDataSet.java
+END
+IRODSAccount.java
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/205/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/IRODSAccount.java
+END
+IRODSException.java
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/198/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/IRODSException.java
+END
+IRODSProtocol.java
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/3/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/IRODSProtocol.java
+END
+IRODSCommands.java
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/210/trunk/clients/jargon/src/api/edu/sdsc/grid/io/irods/IRODSCommands.java
+END
