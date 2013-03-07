@@ -9,11 +9,11 @@
 
     // Default IRODS constants
     define("IRODSFILEURL", 	"rods.tempZone:rods@localhost:1247");
-    define("IRODSZONE",		"spalding");
-    define("IRODSHOME", 	"/spalding/home/logan/");
+    define("IRODSZONE",		"spaldingZone");
+    define("IRODSHOME", 	"/spaldingZone/home/irods_user/");
     define("DOANEIMAGES", 	IRODSHOME . "doane/images/");
     define("DOANEVIDEOS", 	IRODSHOME . "doane/videos/");
-    define("IRODSRESC", 	"yellowgreen");
+    define("IRODSRESC", 	"demoResc");
     
     define("SIZE",      	"size");
     define("FILEPATH",  	"path");
@@ -34,9 +34,10 @@
     */
     function writeToIRODS($irodsConn, $srcFilePath, $irodsDir=IRODSHOME, $irodsResc=IRODSRESC, $isMetadataOnly=false) {
         try {
+            echo "\nIRODSDir : " . $irodsDir;
+            $irodsDir = IRODSHOME;
             $fileName = getFileNameFromPath($srcFilePath);
            
-	    /* 
             // check if file already present in IRODS server
             $isFilePresent = isFilePresentInIRODS($irodsConn, $srcFilePath);
 
@@ -53,18 +54,18 @@
                     echo "\nFile " . $fileName . " has been modified at the source !! Reloading it to IRODS server.";
                 }
             }
-            */        
 
             $irodsFilePath = $irodsDir . $fileName;
             $irodsFile = new ProdsFile($irodsConn, $irodsFilePath); 
 
             $retVal = false; 
            
-	    echo "\nSrc File Path : " . $srcFilePath . ", IRODS File Path : " . $irodsFilePath; 
+	        echo "\nSrc File Path : " . $srcFilePath . ", IRODS File Path : " . $irodsFilePath; 
             // Read the file in chunks and keep writing it to IRODS Server
             $fileHandle = fopen($srcFilePath, "r");
             $irodsFile->open("w+", $irodsResc);
 
+            echo "\nreached here !!";
             // Add data to the file only if NON-META mode
             $bytesWritten = 0;
             if(!$isMetadataOnly) {

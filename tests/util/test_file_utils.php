@@ -1,13 +1,14 @@
 <?php
     
-    // Test cases for file_utils.php
+    // Test cases for file_utils.php. These are not true test cases but placeholder files to test the
+    // functionality of function in an ad-hoc manner
 
     require_once(__DIR__."/../../src/commons/config.php");
     require_once(__DIR__."/../../src/util/file_utils.php");
 
     // Define the data directorys here. Change this to apt local directories where data is stored.
-    define("SRCIMAGESDIR", "/home/irod/resources/data/images/");
-    define("SRCVIDEOSDIR", "/home/irod/resources/data/videos/");
+    define("SRCIMAGESDIR", __DIR__ . "/../../data/images/");
+    define("SRCVIDEOSDIR", __DIR__ . "/../../data/videos/");
 
     define("IRODSIMAGESDIR", "/spalding/home/logan/doane/images/");
     define("IRODSVIDEOSDIR", "/spalding/home/logan/doane/videos/");
@@ -15,7 +16,7 @@
 
     function testWriteFileIntoIRODS($irodsConn, $srcFilePath, $irodsDirPath)
     {
-        $resOp = writeToIRODS($irodsConn, $srcFilePath, $irodsDirPath);
+        $resOp = writeToIRODS($irodsConn, $srcFilePath);
 
         $isTestPassed = false;
         if($resOp) {
@@ -136,9 +137,10 @@
         return ($isFileModified ? "False" : "True"); // Testfile should not have been modified
     }
 
-    $irodsConn = new RODSAccount("localhost", 1247, "logan", "smeaton4me");
-    $testFile = "dance.jpg";
-    $testFilePath = SRCIMAGESDIR . $testFile;
+    $irodsConn = new RODSAccount("localhost", 1247, "irods_user", "irods_user");
+    
+    //$testFile = "dance.jpg";
+    //$testFilePath = SRCIMAGESDIR . $testFile;
 
     // Run all the tests here - Uncomment the tests that you want to run
     //$isTestPassed = testGetFileNameFromPath($testFilePath);
@@ -148,10 +150,10 @@
     //echo "\n ** getSrcFilePathFromName test result : " . $isTestPassed . "\n";
 
     # Insert image into IRODS
-    $imageFilePath = SRCIMAGESDIR . "bitbucket.png";
-    echo "Image : " . $imageFilePath;
-    $isTestPassed = testWriteFileIntoIRODS($irodsConn, $imageFilePath, IRODSIMAGESDIR);
-    echo "\n ** writeFileIntoIRODS test result : " . $isTestPassed . "\n";
+    //$imageFilePath = SRCIMAGESDIR . "testimage3.png";
+    //echo "Image : " . $imageFilePath;
+    //$isTestPassed = testWriteFileIntoIRODS($irodsConn, $imageFilePath, null);
+    //echo "\n ** writeFileIntoIRODS test result : " . $isTestPassed . "\n";
 
     # Insert Video into IRODS
     #$videoFilePath = SRCVIDEOSDIR . "media.mpg";
@@ -172,7 +174,7 @@
     //$isTestPassed = testReadMetadataForFile($irodsConn, $testFile);
     //echo "\n ** readMetadataForFile test result : " . $isTestPassed . "\n";
 
-    //$dirPath = "/tempZone/home/rods";
+    //$dirPath = "/spaldingZone/home/irods_user";
     //$isTestPassed = testListFiles($irodsConn, $dirPath);
     //echo "\n ** listFiles test result : " . $isTestPassed . "\n";
 

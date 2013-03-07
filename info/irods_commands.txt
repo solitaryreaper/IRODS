@@ -1,7 +1,7 @@
 // List of useful IRODS commands for reference
 
 # Create a resource
-shishir@ubuntu:~$ iadmin mkresc doane 'unix file system' cache 'ubuntu' '/home/shishir/Work/IRODS/resources/iRODS/resourceGroups/offsite/doane'
+iadmin mkresc doane 'unix file system' cache 'ubuntu' '/home/shishir/Work/IRODS/resources/iRODS/resourceGroups/offsite/doane'
 
 # Create a resource group
 shishir@ubuntu:~$ iadmin atrg offsite doane
@@ -15,4 +15,5 @@ ils -rV
 # List all resources
 ilsresc -V
 
-
+#Check the environment variables
+ienv

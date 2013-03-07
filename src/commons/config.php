@@ -8,5 +8,5 @@
     require_once(__DIR__."/../../lib/PRODS/clients/prods/src/ProdsStreamer.class.php");
   
     // Create a default connection to IRODS server
-    $irodsConn = new RODSAccount("localhost", 1247, "logan", "smeaton4me");
+    $irodsConn = new RODSAccount("localhost", 1247, "irods_user", "irods_user");
 ?>

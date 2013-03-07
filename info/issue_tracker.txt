@@ -4,14 +4,17 @@
    access of IRODS server would be over network, need to add trust entries for the same in pg_hba.conf.
 
 2)  Apparently the above issue is occuring intermittently. Whenever I am trying to insert metadata for a file in IRODS serve, it is giving CAT_UNKNOWN_FILE error. 
-    Need to fix this issue as the IRODS system is not that useful unless I can store the metadata for the files that are being staged in IRODS server. Asked this
-    question in IRODS forum to see if someone has any clue about the same. Seems like it has to do with some postgresql setting which I have not been able to figure
-    out.
+Need to fix this issue as the IRODS system is not that useful unless I can store the metadata for the files that are being staged in IRODS server. Asked this
+question in IRODS forum to see if someone has any clue about the same. Seems like it has to do with some postgresql setting which I have not been able to figure
+out.
 
-    Fixed this issue. Actually the file needs to be present in IRODS server before you can add metadata for it in ICAT database. So, while writing to IRODS server make sure that the data for the file is     written first and the metadata written after that.
+Fixed this issue. Actually the file needs to be present in IRODS server before you can add metadata for it in ICAT database. So, while writing to IRODS server make sure that the data for the file is     written first and the metadata written after that.
 
 3)  2/11/2013 : When I am trying to update the metadata of a file in ICAT, even after deleting the old meta it is still visible in the ICAT database. Need to figure this out.
 
 4) Sometimes you would get an issue when the IRODS server would just not start. It would say that it is not able to connect to the postgres server on 5432. I could nnot find the exact reason for the failure but if you kill the postgres process and restart the IRODS using ./irodsctl start it works.
 
 5) Tried to copy a big movie file using PhP IRODS. It is very slow. I wonder if I should just call IRODS icommands from php script to accomplish some of the advancedtasks. TODO.
+
+6) The installation of IRODS on RedHat failed because of some missing dependent libraries. Found the relevant missing dependent libraries.Reported this to IRODS
+team and it has beend documented at https://www.irods.org/index.php/Installation#System_Requirements .
