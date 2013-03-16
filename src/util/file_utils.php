@@ -81,7 +81,6 @@
             $irodsFile->close();
 
             $retVal = (($bytesWritten >= 0) ? true : false);
-	    /*
             if($retVal) {
                 echo "\nWriting metadata for the file ". $fileName . " to ICAT database";
                 $isMetaAdded = addMetadataToFile($irodsConn, $srcFilePath, $irodsFile, $isFileModifiedAtSrc);
@@ -90,7 +89,6 @@
                     $retVal = false;
                 }
             }
-	    */
         } 
         catch(RODSException $e) {
             printException("writeFileIntoIRODS", $e);

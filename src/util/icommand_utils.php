@@ -17,11 +17,19 @@
             return;
         }
 
-        $writeCommand = "iput -bPQV " . $srcFilePath;
-        executeICommand($writeCommand);   
+        $writeCmd = "iput -bPQV " . $srcFilePath;
+        executeICmd($writeCmd);   
     }   
     
-    
+    /*
+        Creates a new IRODS directory
+     */
+    function icmdCreateDirectory($dirName, $parentIRODSDirPath)
+    {
+        $createCmd = "imkdir -p " . $parentIRODSDirPath . $dirName;
+        executeICommand($createCmd);
+    }
+        
     /*  
      * Executes an icommand on system
      */
