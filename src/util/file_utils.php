@@ -65,14 +65,14 @@
             $fileHandle = fopen($srcFilePath, "r");
             $irodsFile->open("w+", $irodsResc);
 
-            echo "\nreached here !!";
             // Add data to the file only if NON-META mode
             $bytesWritten = 0;
             if(!$isMetadataOnly) {
                 echo "\nWriting data from file : " . $fileName . " to IRODS path : ". $irodsFilePath . " ...";
                 $bytesWritten = 0;
-                while(($buffer = fgets($fileHandle, 4096)) != false) {
-                    $bytesWritten = $bytesWritten + $irodsFile->write($buffer);
+                while(($buffer = fgets($fileHandle, 1000000)) != false) {
+                    $bytesWritten = $bytesWritten + $irodsFile->write($buffer, 1000000);
+                    echo "\nTill now" . $bytesWritten . " ... ";
                 }
                 echo "\nWrote " . $bytesWritten . " bytes to the file " . $fileName . " on IRODS server. ";
             }

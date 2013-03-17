@@ -1,12 +1,13 @@
 <?php
 
     require 'commons/config.php';
+    require 'util/file_utils.php';
 
     /*
         Imports files into the IRODS server from the path specified
         and tags with filename, timestamp, size and directoryname
     */
-    function importFilesIntoIROD($rootDirPath) {
+    function importFilesIntoIROD($rootDirPath, $irodsConn) {
         // check if the filepath is valid
         if(is_null($rootDirPath) || strlen($rootDirPath) == 0) {
             echo "Invalid filepath ". $srcFilePath. ". Please specify a correct root directory path .";
@@ -19,6 +20,10 @@
         // Read all the sub-directories and their corresponding files to a maxdepth of 1
         $rootDirFiles = scandir($rootDirPath);
         foreach($rootDirFiles as $rootDirFile) {
+            if($fileCount > 3) {
+                echo "\nExiting ..";
+                return;
+            }
             $rootDirFilePath = $rootDirPath. DIRECTORY_SEPARATOR. $rootDirFile;
             // If directory - create similiar directory in IRODS and write all files in
             // sub-directory inside the corresponding collection in IRODS
@@ -32,6 +37,9 @@
                     if(is_file($subDirFilePath)) {
                         if(isValidFile($subDirFilePath)) {
                             // TODO : Upload this file to IRODS under apt subdirectory.
+                            echo "\nWriting file " . basename($subDirFilePath) . " to IRODS";
+                            $resOp = writeToIRODS($irodsConn, $subDirFilePath);
+                            echo "\n IRODS write successful.";
                             $fileCount++;
                         }
                     }
@@ -40,8 +48,13 @@
             }
             // If file - simply write this file to root images collection in IRODS
             else {
-                // TODO : Upload this file to IRODS server under root directory.
-                $fileCount++;
+                if(isValidFile($rootDirFilePath)) {
+                    $fileCount++;
+                    $resOp = writeToIRODS($irodsConn, $rootDirFilePath);
+                    if($resOp) {
+                        echo "\n IRODS write successsful.";
+                    }
+                }
             }
         }
 
@@ -124,5 +137,6 @@
     // Test import of digital image files here
     $dir = "/mnt/irods_data";
     echo "\nTesting import of files from directory : ". $dir;
-    importFilesIntoIROD($dir);
+    $irodsConn = new RODSAccount("localhost", 1247, "irods_user", "irods_user");
+    importFilesIntoIROD($dir, $irodsConn);
 ?>

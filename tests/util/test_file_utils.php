@@ -151,9 +151,10 @@
 
     # Insert image into IRODS
     //$imageFilePath = SRCIMAGESDIR . "testimage3.png";
-    //echo "Image : " . $imageFilePath;
-    //$isTestPassed = testWriteFileIntoIRODS($irodsConn, $imageFilePath, null);
-    //echo "\n ** writeFileIntoIRODS test result : " . $isTestPassed . "\n";
+    $imageFilePath = "/mnt/irods_data/447-3-sm-130-71-34-448-3-sm-82-106-108/Scan-110309-0116.tif";
+    echo "Image : " . $imageFilePath;
+    $isTestPassed = testWriteFileIntoIRODS($irodsConn, $imageFilePath, null);
+    echo "\n ** writeFileIntoIRODS test result : " . $isTestPassed . "\n";
 
     # Insert Video into IRODS
     #$videoFilePath = SRCVIDEOSDIR . "media.mpg";
