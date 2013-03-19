@@ -9,7 +9,7 @@
     }
 
     $srcFilePath  = __DIR__ . "/../../data/images/testimage1.png";
-    $irodsDirPath = null;
+    $irodsDirPath = "/spaldingZone/home/irods_user/doane/images/";
     testIcmdWriteFileToIRODS($srcFilePath, $irodsDirPath);
 ?>
 

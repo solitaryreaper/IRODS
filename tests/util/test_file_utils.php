@@ -10,13 +10,13 @@
     define("SRCIMAGESDIR", __DIR__ . "/../../data/images/");
     define("SRCVIDEOSDIR", __DIR__ . "/../../data/videos/");
 
-    define("IRODSIMAGESDIR", "/spalding/home/logan/doane/images/");
-    define("IRODSVIDEOSDIR", "/spalding/home/logan/doane/videos/");
+    define("IRODSIMAGESDIR", "/spaldingZone/home/irods_user/doane/images/");
+    define("IRODSVIDEOSDIR", "/spaldingZone/home/irods_user/doane/videos/");
 
 
     function testWriteFileIntoIRODS($irodsConn, $srcFilePath, $irodsDirPath)
     {
-        $resOp = writeToIRODS($irodsConn, $srcFilePath);
+        $resOp = writeToIRODS($irodsConn, $srcFilePath, $irodsDirPath);
 
         $isTestPassed = false;
         if($resOp) {
@@ -152,8 +152,9 @@
     # Insert image into IRODS
     //$imageFilePath = SRCIMAGESDIR . "testimage3.png";
     $imageFilePath = "/mnt/irods_data/447-3-sm-130-71-34-448-3-sm-82-106-108/Scan-110309-0116.tif";
+    $irodsDirPath = "/spaldingZone/home/irods_user/doane/images/mytes/";
     echo "Image : " . $imageFilePath;
-    $isTestPassed = testWriteFileIntoIRODS($irodsConn, $imageFilePath, null);
+    $isTestPassed = testWriteFileIntoIRODS($irodsConn, $imageFilePath, $irodsDirPath);
     echo "\n ** writeFileIntoIRODS test result : " . $isTestPassed . "\n";
 
     # Insert Video into IRODS

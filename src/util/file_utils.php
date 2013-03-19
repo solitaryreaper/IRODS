@@ -6,13 +6,14 @@
     */
 
     require_once(__DIR__.'/../commons/config.php');
+    require_once(__DIR__.'/../util/icommand_utils.php');
 
     // Default IRODS constants
     define("IRODSFILEURL", 	"rods.tempZone:rods@localhost:1247");
     define("IRODSZONE",		"spaldingZone");
     define("IRODSHOME", 	"/spaldingZone/home/irods_user/");
-    define("DOANEIMAGES", 	IRODSHOME . "doane/images/");
-    define("DOANEVIDEOS", 	IRODSHOME . "doane/videos/");
+    define("DOANEIMAGES", 	IRODSHOME. "doane/images/");
+    define("DOANEVIDEOS", 	IRODSHOME. "doane/videos/");
     define("IRODSRESC", 	"demoResc");
     
     define("SIZE",      	"size");
@@ -32,10 +33,8 @@
         @isMetadataOnly - If true, only write metadata for the file . Else, 
                           write both data and metadata for the file.
     */
-    function writeToIRODS($irodsConn, $srcFilePath, $irodsDir=IRODSHOME, $irodsResc=IRODSRESC, $isMetadataOnly=false) {
+    function writeToIRODS($irodsConn, $srcFilePath, $irodsDir, $irodsResc=IRODSRESC, $isMetadataOnly=false) {
         try {
-            echo "\nIRODSDir : " . $irodsDir;
-            $irodsDir = IRODSHOME;
             $fileName = getFileNameFromPath($srcFilePath);
            
             // check if file already present in IRODS server
@@ -55,6 +54,12 @@
                 }
             }
 
+            // Create the collection in IRODS if it doesn't already exists
+            $retVal = icmdCreateDirectory($irodsDir);
+            if(!$retVal) {
+                echo "\nFailed to create the IRODS directory : " . $irodsDir;
+                return $retVal;
+            }
             $irodsFilePath = $irodsDir . $fileName;
             $irodsFile = new ProdsFile($irodsConn, $irodsFilePath); 
 
@@ -69,18 +74,12 @@
             $bytesWritten = 0;
             if(!$isMetadataOnly) {
                 echo "\nWriting data from file : " . $fileName . " to IRODS path : ". $irodsFilePath . " ...";
-                $bytesWritten = 0;
-                while(($buffer = fgets($fileHandle, 1000000)) != false) {
-                    $bytesWritten = $bytesWritten + $irodsFile->write($buffer, 1000000);
-                    echo "\nTill now" . $bytesWritten . " ... ";
-                }
-                echo "\nWrote " . $bytesWritten . " bytes to the file " . $fileName . " on IRODS server. ";
+                $retVal = icmdWriteFileToIRODS($srcFilePath, $irodsFilePath);
             }
 
             fclose($fileHandle);
             $irodsFile->close();
 
-            $retVal = (($bytesWritten >= 0) ? true : false);
             if($retVal) {
                 echo "\nWriting metadata for the file ". $fileName . " to ICAT database";
                 $isMetaAdded = addMetadataToFile($irodsConn, $srcFilePath, $irodsFile, $isFileModifiedAtSrc);

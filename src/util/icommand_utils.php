@@ -17,17 +17,21 @@
             return;
         }
 
-        $writeCmd = "iput -bPQV " . $srcFilePath;
-        executeICmd($writeCmd);   
+        if(!isset($irodsDirPath)) {
+            $irodsDirPath = "";
+        }
+
+        $writeCmd = "iput -bfPQ " . $srcFilePath . " " . $irodsDirPath;
+        return executeICommand($writeCmd);   
     }   
     
     /*
         Creates a new IRODS directory
      */
-    function icmdCreateDirectory($dirName, $parentIRODSDirPath)
+    function icmdCreateDirectory($irodsDirPath)
     {
-        $createCmd = "imkdir -p " . $parentIRODSDirPath . $dirName;
-        executeICommand($createCmd);
+        $createCmd = "imkdir -p " . $irodsDirPath;
+        return executeICommand($createCmd);
     }
         
     /*  
@@ -35,16 +39,18 @@
      */
     function executeICommand($command)
     {   
+        echo "\nICommand to execute : " . $command;
         $output=null;
+        $isSuccess = true;
         try {
             exec($command, $output);
         }   
         catch(Exception $e) {
-            echo "Icommand " . $command . " failed. Reason " . $e; 
+            echo "ICommand " . $command . " failed. Reason " . $e; 
+            $isSuccess = false;
         }   
 
-        print_r($output);
-        return $output;
+        return $isSuccess;
     }   
 
 ?>
