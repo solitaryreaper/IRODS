@@ -9,12 +9,11 @@
     require_once(__DIR__.'/../util/icommand_utils.php');
 
     // Default IRODS constants
-    define("IRODSFILEURL", 	"rods.tempZone:rods@localhost:1247");
     define("IRODSZONE",		"spaldingZone");
     define("IRODSHOME", 	"/spaldingZone/home/irods_user/");
     define("DOANEIMAGES", 	IRODSHOME. "doane/images/");
     define("DOANEVIDEOS", 	IRODSHOME. "doane/videos/");
-    define("IRODSRESC", 	"demoResc");
+    define("IRODSRESC", 	"csirods1RescGroup");
     
     define("SIZE",      	"size");
     define("FILEPATH",  	"path");
@@ -33,7 +32,7 @@
         @isMetadataOnly - If true, only write metadata for the file . Else, 
                           write both data and metadata for the file.
     */
-    function writeToIRODS($irodsConn, $srcFilePath, $irodsDir, $irodsResc=IRODSRESC, $isMetadataOnly=false) {
+    function writeToIRODS($irodsConn, $srcFilePath, $irodsDir, $irodsResc, $isMetadataOnly) {
         try {
             $fileName = getFileNameFromPath($srcFilePath);
            
@@ -46,7 +45,7 @@
                 $isFileModifiedAtSrc = isFileModifiedAtSource($irodsConn, $fileName);
                 // Return if this file is already present in IRODS and has not been modified
                 if(!$isFileModifiedAtSrc) {
-                    echo "\nFile " . $fileName . " is already present in IRODS server !!";
+                    echo "\nFile " . $fileName . " is already present in IRODS server !! Overwriting to IRODS server.";
                     return true;
                 }
                 else {
@@ -63,25 +62,30 @@
             $irodsFilePath = $irodsDir . $fileName;
             $irodsFile = new ProdsFile($irodsConn, $irodsFilePath); 
 
-            $retVal = false; 
+            $retVal = true; 
            
 	        echo "\nSrc File Path : " . $srcFilePath . ", IRODS File Path : " . $irodsFilePath; 
-            // Read the file in chunks and keep writing it to IRODS Server
-            $fileHandle = fopen($srcFilePath, "r");
-            $irodsFile->open("w+", $irodsResc);
+            $isFileOpened = false;
+            if(!$irodsFile->exists()) {
+                $irodsFile->open("w+", $irodsResc);
+                $isFileOpened = true;
+            }
 
             // Add data to the file only if NON-META mode
-            $bytesWritten = 0;
             if(!$isMetadataOnly) {
-                echo "\nWriting data from file : " . $fileName . " to IRODS path : ". $irodsFilePath . " ...";
                 $retVal = icmdWriteFileToIRODS($srcFilePath, $irodsFilePath);
             }
 
-            fclose($fileHandle);
-            $irodsFile->close();
+            if($isFileOpened) {
+                $irodsFile->close();
+            }
 
             if($retVal) {
-                echo "\nWriting metadata for the file ". $fileName . " to ICAT database";
+                // Don't write metadat again, if the data file is just being reloaded to IRODS server.
+                if($isFilePresent && !$isFileModifiedAtSrc) {
+                    return $retVal;
+                }
+
                 $isMetaAdded = addMetadataToFile($irodsConn, $srcFilePath, $irodsFile, $isFileModifiedAtSrc);
                 if(!$isMetaAdded) {
                     echo "\nFailed to add metadata for file : " . $srcFilePath ;
@@ -247,20 +251,10 @@
         return $files;
     }
 
-    // Reads a file from IRODS Server
-    // TODO : Exception if read from IRODS server fails 
-    function readFromIRODS($irodsConn, $fileName) {
-        $irodsFileLoc = getFileLocInIRODS($irodsConn, $fileName);
-        $irodsFileLoc = IRODSFILEURL . $irodsFileLoc;
-        echo "IRODS file URL for file " . $fileName . " is " . $irodsFileLoc;
-
-        return file_get_contents($irodsFileLoc);
-    }
-
     // Checks if a file is already present in IRODS Server
-    function isFilePresentInIRODS($irodsConn, $srcFilePath) {
+    function isFilePresentInIRODS($irodsConn, $fileName) {
         $isFilePresent = false;
-        $metadata = new RODSMeta(FILEPATH, $srcFilePath, NULL, NULL, "=");
+        $metadata = new RODSMeta(FILEPATH, $fileName, NULL, NULL, "=");
         
         $files = findIRODSFilesByMeta($irodsConn, $metadata);        
         if(!empty($files)) {
@@ -367,6 +361,7 @@
         $srcFileStats = array();
         $srcFileStats[SIZE] = $fileStats["size"];
         $srcFileStats[TIMESTAMP] = $fileStats["mtime"];
+        
         $srcFileStats[FILEPATH] = $srcFilePath;
         $srcFileStats[HASH] = md5($fileAttrs);
 

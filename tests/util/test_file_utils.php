@@ -16,7 +16,7 @@
 
     function testWriteFileIntoIRODS($irodsConn, $srcFilePath, $irodsDirPath)
     {
-        $resOp = writeToIRODS($irodsConn, $srcFilePath, $irodsDirPath);
+        $resOp = writeToIRODS($irodsConn, $srcFilePath, $irodsDirPath, "csirods1RescGroup", false);
 
         $isTestPassed = false;
         if($resOp) {

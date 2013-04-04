@@ -21,7 +21,7 @@
             $irodsDirPath = "";
         }
 
-        $writeCmd = "iput -bfPQ " . $srcFilePath . " " . $irodsDirPath;
+        $writeCmd = "iput -bkfPQ " . $srcFilePath . " " . $irodsDirPath;
         return executeICommand($writeCmd);   
     }   
     
@@ -33,7 +33,16 @@
         $createCmd = "imkdir -p " . $irodsDirPath;
         return executeICommand($createCmd);
     }
-        
+    
+    /*
+        Replicates a file from the source resource to the destination resource.
+    */   
+    function icmdReplFile($srcResc, $desResc, $srcFilePath)
+    {
+        $replCmd = "irepl -S " . $srcResc . " -R " . $desResc . " " . $srcFilePath;
+        return executeICommand($replCmd);
+    }
+
     /*  
      * Executes an icommand on system
      */
