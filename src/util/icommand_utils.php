@@ -10,7 +10,7 @@
         @irodsDirPath   -   Destination path on IRODS server. If NULL, then it is copied to the home
                             directory on IRODS server.
     */
-    function icmdWriteFileToIRODS($srcFilePath, $irodsDirPath=null)
+    function icmdWriteFileToIRODS($srcFilePath, $irodsDirPath=null, $irodsResc)
     {   
         if(!file_exists($srcFilePath)) {
             echo "Source file " . $srcFilePath . " does not exist !!";
@@ -21,7 +21,7 @@
             $irodsDirPath = "";
         }
 
-        $writeCmd = "iput -bkfPQ " . $srcFilePath . " " . $irodsDirPath;
+        $writeCmd = "iput -R " . $irodsResc ." -bkfPQ " . $srcFilePath . " " . $irodsDirPath;
         return executeICommand($writeCmd);   
     }   
     

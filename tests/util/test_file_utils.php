@@ -137,7 +137,7 @@
         return ($isFileModified ? "False" : "True"); // Testfile should not have been modified
     }
 
-    $irodsConn = new RODSAccount("localhost", 1247, "irods_user", "irods_user");
+    $irodsConn = new RODSAccount("198.51.254.78", 1247, "irods_user", "irods_user");
     
     //$testFile = "dance.jpg";
     //$testFilePath = SRCIMAGESDIR . $testFile;
@@ -151,7 +151,7 @@
 
     # Insert image into IRODS
     //$imageFilePath = SRCIMAGESDIR . "testimage3.png";
-    $imageFilePath = "/mnt/irods_data/447-3-sm-130-71-34-448-3-sm-82-106-108/Scan-110309-0116.tif";
+    $imageFilePath = "/mnt/doane/share/doane/RIL_Data/447-3-sm-130-71-34-448-3-sm-82-106-108/Scan-110309-0116.tif";
     $irodsDirPath = "/spaldingZone/home/irods_user/doane/images/mytes/";
     echo "Image : " . $imageFilePath;
     $isTestPassed = testWriteFileIntoIRODS($irodsConn, $imageFilePath, $irodsDirPath);

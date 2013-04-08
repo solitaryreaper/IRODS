@@ -45,11 +45,8 @@
                 $isFileModifiedAtSrc = isFileModifiedAtSource($irodsConn, $fileName);
                 // Return if this file is already present in IRODS and has not been modified
                 if(!$isFileModifiedAtSrc) {
-                    echo "\nFile " . $fileName . " is already present in IRODS server !! Overwriting to IRODS server.";
+                    echo "\nFile " . $fileName . " is already present in IRODS server !!";
                     return true;
-                }
-                else {
-                    echo "\nFile " . $fileName . " has been modified at the source !! Reloading it to IRODS server.";
                 }
             }
 
@@ -64,7 +61,7 @@
 
             $retVal = true; 
            
-	        echo "\nSrc File Path : " . $srcFilePath . ", IRODS File Path : " . $irodsFilePath; 
+	    echo "\nSrc File Path : " . $srcFilePath . ", IRODS File Path : " . $irodsFilePath; 
             $isFileOpened = false;
             if(!$irodsFile->exists()) {
                 $irodsFile->open("w+", $irodsResc);
@@ -73,7 +70,7 @@
 
             // Add data to the file only if NON-META mode
             if(!$isMetadataOnly) {
-                $retVal = icmdWriteFileToIRODS($srcFilePath, $irodsFilePath);
+                $retVal = icmdWriteFileToIRODS($srcFilePath, $irodsFilePath, $irodsResc);
             }
 
             if($isFileOpened) {
@@ -81,11 +78,6 @@
             }
 
             if($retVal) {
-                // Don't write metadat again, if the data file is just being reloaded to IRODS server.
-                if($isFilePresent && !$isFileModifiedAtSrc) {
-                    return $retVal;
-                }
-
                 $isMetaAdded = addMetadataToFile($irodsConn, $srcFilePath, $irodsFile, $isFileModifiedAtSrc);
                 if(!$isMetaAdded) {
                     echo "\nFailed to add metadata for file : " . $srcFilePath ;
@@ -109,8 +101,6 @@
     */
     function addMetadataToFile($irodsConn, $srcFilePath, $irodsFile, $isMetaToBeUpdated)
     {
-        echo "\nWriting metadata from file : " . $srcFilePath . " to IRODS path : " . $irodsFile;
-
         try {
             // Add the metadata for all the files
             $fileStats = getSrcFileStats($srcFilePath);
@@ -278,7 +268,6 @@
         $fileHash = NULL;
         $fileMetadata = $metadatas[$fileName];
         foreach($fileMetadata as $key=>$value) {
-            echo "\nKey : " . $key . ", Value : " . $value;
             if($key == HASH) {
                 $fileHash = $value;
             }
@@ -291,14 +280,11 @@
             return $isFileModified;
         }
 
-        echo "\n Old Hash " . $fileHash . ", Path " . $filePath;
-
         // compare the new hash value with the old hash value
         $newStats = getSrcFileStats($filePath);
         foreach($newStats as $key=>$value) {
             if($key == HASH) {
                 $newHash = $value;
-                echo "\n New Hash " . $newHash;
                 if($newHash != $fileHash) {
                     $isFileModified = true;
                 }

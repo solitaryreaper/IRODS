@@ -3,6 +3,9 @@
     require 'commons/config.php';
     require 'util/file_utils.php';
 
+    // List of source directories that have alredy been processed.
+    define("DIR_PROCESSED_LIST", "/home/skprasad/IRODS/code/IRODS/src/done_dir.txt");
+
     /*
         Imports files into the IRODS server from the path specified
         and tags with filename, timestamp, size and directoryname
@@ -25,10 +28,11 @@
             // If directory - create similiar directory in IRODS and write all files in
             // sub-directory inside the corresponding collection in IRODS
             if(is_dir($rootDirFilePath)) {
-                if(!isValidDir($rootDirFilePath)) {
+                if(!isValidDir($rootDirFilePath) || isDirAlreadyProcessed($rootDirFilePath)) {
                     continue;
                 }
 
+		        echo "\n Loading images from directory : " . $rootDirFilePath;
                 $dirCount++;
                 $irodsDirPath = $irodsRootDirPath . basename($rootDirFilePath). "/";
                 
@@ -47,11 +51,14 @@
             // If file - simply write this file to root images collection in IRODS
             else {
                 if(isValidFile($rootDirFilePath)) {
-                    $irodsDirPath = DOANEIMAGES;
+                    $irodsDirPath = $irodsRootDirPath;
                     writeAndReplFileToIRODS($irodsConn, $rootDirFilePath, $irodsDirPath, $irodsDesc, $isMetaDataOnly);
                     $fileCount++;
                 }
             }
+
+            echo "\n Processed directory " . $rootDirFilePath . " into IRODS server.";
+            addDirToProcessedList($rootDirFilePath);
         }
 
         $now = microtime(true);
@@ -61,12 +68,49 @@
 
     }
 
+    /*
+        Often during processing of large datasets, this script has died prematurely leading to 
+        iterating over all the files from scratch to see if they have already been added to IRODS
+        server. This takes sufficient time. This solution is a simple hack where I record all the
+        processed directories in a file and then just do a lookup on that file to see if that
+        directory has already been processed.
+    */
+    function addDirToProcessedList($dirPath)
+    {
+        $fp = fopen(DIR_PROCESSED_LIST, "a");
+        $out = fwrite($fp, $dirPath . PHP_EOL);
+        fclose($fp);
+        
+        return $out;    	
+    }
+
+    /*
+        Checks if this directory has already been processed in previous runs.
+    */
+    function isDirAlreadyProcessed($dirPath)
+    {   
+        $isDirProcessed = false;
+       
+        $fp = fopen(DIR_PROCESSED_LIST, "r");
+        while ( ! feof( $fp ) ) {
+            $line = fgets( $fp);
+            $line = trim(preg_replace('/\s+/', ' ', $line));
+            if($line == $dirPath) {
+                $isDirProcessed = true;
+                echo "\n$dirPath has already been processed.";
+                break;
+            }
+        }
+        fclose($fp);
+
+        return $isDirProcessed;
+    }
+
     /**
         Write file to IRODS and replicate it to destination.
     */
     function writeAndReplFileToIRODS($irodsConn, $srcFilePath, $irodsDirPath, $irodsResc, $isMetaDataOnly)
     {
-        echo "\n Src Dir : " . $srcFilePath . " , IRODS Dir : " . $irodsDirPath;
         $resOp = writeToIRODS($irodsConn, $srcFilePath, $irodsDirPath, $irodsResc, $isMetaDataOnly);
         if($resOp == false) {
             echo "\n IRODS write failed for " . $srcFilePath;
@@ -128,14 +172,15 @@
         return $isValidFile;
     }
 
-    // Test import of digital image files here
-    $srcRootDir   = "/mnt/irods_data";
+    // Various paramaters to import source files into IRODS server 
+    $srcRootDir   = "/mnt/doane/share/doane/RIL_Data";
     $irodsRootDir = DOANEIMAGES;
     $irodsResc    = IRODSRESC;
-    $isMetaDataOnly = true;
-
-    echo "\nTesting import of files from directory : ". $srcRootDir;
-    $irodsConn = new RODSAccount("localhost", 1247, "irods_user", "irods_user");
+    $isMetaDataOnly = false;
+    $irodsConn = new RODSAccount("198.51.254.78", 1247, "irods_user", "irods_user");
+    
+    echo "\nImporting image files from directory : ". $srcRootDir . " to IRODS server." ;
     importFilesIntoIROD($irodsConn, $srcRootDir, $irodsRootDir, $irodsResc, $isMetaDataOnly);
+    echo "\nImported all files from source directory to IRODS server !! ";
 
 ?>
