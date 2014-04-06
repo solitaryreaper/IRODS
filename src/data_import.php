@@ -4,13 +4,15 @@
     require 'util/file_utils.php';
 
     // List of source directories that have alredy been processed.
-    define("DIR_PROCESSED_LIST", "/home/skprasad/IRODS/code/IRODS/src/done_dir.txt");
+    //define("DIR_PROCESSED_LIST", "/home/skprasad/IRODS/code/IRODS/src/done_dir.txt");
+    define("DIR_PROCESSED_LIST", __DIR__.'/../resources/done_dir.txt');
 
     /*
         Imports files into the IRODS server from the path specified
         and tags with filename, timestamp, size and directoryname
     */
     function importFilesIntoIROD($irodsConn, $rootDirPath, $irodsRootDirPath, $irodsResc, $isMetaDataOnly) {
+        echo "\nProcessed : "  . DIR_PROCESSED_LIST;
         // check if the filepath is valid
         if(is_null($rootDirPath) || strlen($rootDirPath) == 0) {
             echo "Invalid filepath ". $srcFilePath. ". Please specify a correct root directory path .";
@@ -41,7 +43,8 @@
                     $subDirFilePath = $rootDirFilePath. DIRECTORY_SEPARATOR. $subDirFile;
                     if(is_file($subDirFilePath)) {
                         if(isValidFile($subDirFilePath)) {
-                            writeAndReplFileToIRODS($irodsConn, $subDirFilePath, $irodsDirPath, $irodsResc, $isMetaDataOnly);
+                            echo "\n File : " . $subDirFilePath;
+                            //writeAndReplFileToIRODS($irodsConn, $subDirFilePath, $irodsDirPath, $irodsResc, $isMetaDataOnly);
                             $fileCount++;
                         }
                     }
@@ -107,8 +110,8 @@
     }
 
     /**
-        Write file to IRODS and replicate it to destination.
-    */
+     *   Write file to IRODS and replicate it to destination.
+     */
     function writeAndReplFileToIRODS($irodsConn, $srcFilePath, $irodsDirPath, $irodsResc, $isMetaDataOnly)
     {
         $resOp = writeToIRODS($irodsConn, $srcFilePath, $irodsDirPath, $irodsResc, $isMetaDataOnly);
@@ -172,13 +175,20 @@
         return $isValidFile;
     }
 
-    // Various paramaters to import source files into IRODS server 
-    $srcRootDir   = "/mnt/doane/share/doane/RIL_Data";
-    $irodsRootDir = DOANEIMAGES;
-    $irodsResc    = IRODSRESC;
-    $isMetaDataOnly = false;
-    $irodsConn = new RODSAccount("198.51.254.78", 1247, "irods_user", "irods_user");
-    
+    // Various paramaters to import source files into IRODS server. Import this from command line
+    $srcRootDir   = $argv[1]; //"/mnt/doane/share/doane/RIL_Data";
+    $irodsRootDir = $argv[2]; //DOANEIMAGES;
+    $irodsResc    = $argv[3]; //IRODSRESC;
+    $isMetaDataOnly = $argv[4]; //false;
+    $irods_server = $argv[5];
+    $irods_user = $argv[6];
+    $irods_pwd = $argv[7];
+
+    var_dump($argv);
+
+    //$irodsConn = new RODSAccount("198.51.254.78", 1247, "irods_user", "irods_user");
+    $irodsConn = new RODSAccount($irods_server, 1247, $irods_user, $irods_pwd);
+
     echo "\nImporting image files from directory : ". $srcRootDir . " to IRODS server." ;
     importFilesIntoIROD($irodsConn, $srcRootDir, $irodsRootDir, $irodsResc, $isMetaDataOnly);
     echo "\nImported all files from source directory to IRODS server !! ";
